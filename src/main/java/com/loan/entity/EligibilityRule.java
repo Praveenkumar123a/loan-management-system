@@ -23,7 +23,7 @@ public class EligibilityRule {
 	@Column(name = "threshold_value",precision = 8,scale = 2,nullable = false)
 	private BigDecimal thresholdValue;
 	@Column(name = "score_points",nullable = false)
-	private BigDecimal scorePoints;
+	private Integer scorePoints;
 	@Column(name = "is_active")
 	private Boolean isActive;
 	public EligibilityRule() {
@@ -52,10 +52,10 @@ public class EligibilityRule {
 	public void setThresholdValue(BigDecimal thresholdValue) {
 		this.thresholdValue = thresholdValue;
 	}
-	public BigDecimal getScorePoints() {
+	public Integer getScorePoints() {
 		return scorePoints;
 	}
-	public void setScorePoints(BigDecimal scorePoints) {
+	public void setScorePoints(Integer scorePoints) {
 		this.scorePoints = scorePoints;
 	}
 	public Boolean getIsActive() {
