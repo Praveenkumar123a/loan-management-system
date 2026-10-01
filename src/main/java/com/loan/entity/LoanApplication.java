@@ -60,10 +60,10 @@ public class LoanApplication {
 		this.product = product;
 	}
 	public BigDecimal getRequestedAmount() {
-		return RequestedAmount;
+		return requestedAmount;
 	}
 	public void setRequestedAmount(BigDecimal requestedAmount) {
-		RequestedAmount = requestedAmount;
+		this.requestedAmount = requestedAmount;
 	}
 	public int getTenureMonths() {
 		return tenureMonths;
@@ -78,10 +78,10 @@ public class LoanApplication {
 		this.purpose = purpose;
 	}
 	public int getEligibityScore() {
-		return eligibityScore;
+		return eligibilityScore;
 	}
-	public void setEligibityScore(int eligibityScore) {
-		this.eligibityScore = eligibityScore;
+	public void setEligibityScore(int eligibilityScore) {
+		this.eligibilityScore = eligibilityScore;
 	}
 	public ApplicationStatus getStatus() {
 		return status;
