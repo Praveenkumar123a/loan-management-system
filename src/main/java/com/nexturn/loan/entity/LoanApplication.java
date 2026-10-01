@@ -1,9 +1,9 @@
-package com.loan.entity;
+package com.nexturn.loan.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.loan.utils.ApplicationStatus;
+import com.nexturn.loan.utils.ApplicationStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

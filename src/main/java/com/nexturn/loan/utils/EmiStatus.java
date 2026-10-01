@@ -1,4 +1,4 @@
-package com.loan.utils;
+package com.nexturn.loan.utils;
 
 public enum EmiStatus {
     PENDING,

@@ -1,4 +1,4 @@
-package com.loan.entity;
+package com.nexturn.loan.entity;
 import java.math.BigDecimal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

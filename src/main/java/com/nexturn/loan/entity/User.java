@@ -1,6 +1,6 @@
-package com.loan.entity;
+package com.nexturn.loan.entity;
 
-import com.loan.utils.Role;
+import com.nexturn.loan.utils.Role;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,9 +1,9 @@
-package com.loan.repository;
+package com.nexturn.loan.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.loan.entity.Payment;
+import com.nexturn.loan.entity.Payment;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Integer> {

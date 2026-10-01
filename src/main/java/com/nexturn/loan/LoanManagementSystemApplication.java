@@ -1,4 +1,4 @@
-package com.loan;
+package com.nexturn.loan;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
