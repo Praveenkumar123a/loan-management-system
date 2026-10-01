@@ -2,7 +2,15 @@ package com.loan.entity;
 
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "recommendations")
@@ -24,54 +32,41 @@ public class Recommendation {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
     public Recommendation() {
     }
-
     public Integer getRecommendationId() {
         return recommendationId;
     }
-
     public void setRecommendationId(Integer recommendationId) {
         this.recommendationId = recommendationId;
     }
-
     public LoanApplication getApplication() {
         return application;
     }
-
     public void setApplication(LoanApplication application) {
         this.application = application;
     }
-
     public User getOfficer() {
         return officer;
     }
-
     public void setOfficer(User officer) {
         this.officer = officer;
     }
-
     public String getDecision() {
         return decision;
     }
-
     public void setDecision(String decision) {
         this.decision = decision;
     }
-
     public String getComments() {
         return comments;
     }
-
     public void setComments(String comments) {
         this.comments = comments;
     }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }

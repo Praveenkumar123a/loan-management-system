@@ -1,28 +1,37 @@
 package com.loan.entity;
 
 import java.time.LocalDateTime;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
-@Entity 
+@Entity
+@Table(name = "notifications")
 public class Notification {
-    @Id 
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "notification_id")
     private Integer notificationId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+    @Column(name = "message", length = 255, nullable = false)
     private String message;
+    @Column(name = "type", length = 20, nullable = false)
     private String type;
-    private boolean isRead;
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead = false;
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    public Notification(){
-
+    public Notification() {
     }
-    public Notification(Integer notificationId, User user, String message, String type, boolean isRead,
-            LocalDateTime createdAt) {
+    public Notification(Integer notificationId, User user, String message,
+                        String type, boolean isRead, LocalDateTime createdAt) {
         this.notificationId = notificationId;
         this.user = user;
         this.message = message;

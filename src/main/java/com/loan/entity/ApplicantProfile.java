@@ -13,28 +13,29 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="applicant_profiles")
+@Table(name = "applicant_profiles")
 public class ApplicantProfile {
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	private int profileId;
-	@OneToOne
-	@JoinColumn(name = "user_id",nullable=false,unique=true)
-	private User user;
-	@Column(nullable=false)
-	private LocalDate dateOfBirth;
-	@Column(length=255, nullable = false)
-	private String address;
-	@Column(length=10,unique=true)
-	private String panNumber;
-	@Column(length=12, unique=true)
-	private String aadhaarNumber;
-	@Column(length = 30, nullable = false)
-	private String employmentType;
-	@Column(nullable = false)
-	private BigDecimal monthlyIncome;
-	@Column
-	private BigDecimal existingLiabilities;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "profile_id")
+    private int profileId;
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private User user;
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
+    @Column(name = "address", length = 255, nullable = false)
+    private String address;
+    @Column(name = "pan_number", length = 10, unique = true)
+    private String panNumber;
+    @Column(name = "aadhaar_number", length = 12, unique = true)
+    private String aadhaarNumber;
+    @Column(name = "employment_type", length = 30, nullable = false)
+    private String employmentType;
+    @Column(name = "monthly_income", nullable = false, precision = 12, scale = 2)
+    private BigDecimal monthlyIncome;
+    @Column(name = "existing_liabilities", precision = 12, scale = 2)
+    private BigDecimal existingLiabilities;
 	public int getProfileId() {
 		return profileId;
 	}
@@ -89,9 +90,21 @@ public class ApplicantProfile {
 	public void setExistingLiabilities(BigDecimal existingLiabilities) {
 		this.existingLiabilities = existingLiabilities;
 	}
+	public ApplicantProfile() {
+		
+	}
+	public ApplicantProfile(int profileId, User user, LocalDate dateOfBirth, String address, String panNumber,
+			String aadhaarNumber, String employmentType, BigDecimal monthlyIncome, BigDecimal existingLiabilities) {
+		super();
+		this.profileId = profileId;
+		this.user = user;
+		this.dateOfBirth = dateOfBirth;
+		this.address = address;
+		this.panNumber = panNumber;
+		this.aadhaarNumber = aadhaarNumber;
+		this.employmentType = employmentType;
+		this.monthlyIncome = monthlyIncome;
+		this.existingLiabilities = existingLiabilities;
+	}
 	
-	
-	
-	
-
 }

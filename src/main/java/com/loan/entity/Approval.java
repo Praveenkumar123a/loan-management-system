@@ -21,17 +21,10 @@ public class Approval {
 	@Column(name = "approval_id")
 	private Integer approvalId;
 	@OneToOne
-	@JoinColumn(
-	    name = "application_id",
-	    nullable = false,
-	    unique = true
-	)
+	@JoinColumn(name = "application_id",nullable = false,unique = true)
 	private LoanApplication application;
 	@ManyToOne
-	@JoinColumn(
-			name = "manager_id",
-			nullable = false
-	)
+	@JoinColumn(name = "manager_id",nullable = false)
 	private User manager;
 	@Column(length = 10, nullable = false)
 	private String decision;
@@ -47,7 +40,6 @@ public class Approval {
 	@Column(name = "decided_at")
 	private LocalDateTime decidedAt;
 	public Approval() {
-		super();
 	}
 	public Integer getApprovalId() {
 		return approvalId;
@@ -101,6 +93,19 @@ public class Approval {
 		return decidedAt;
 	}
 	public void setDecidedAt(LocalDateTime decidedAt) {
+		this.decidedAt = decidedAt;
+	}
+	public Approval(Integer approvalId, LoanApplication application, User manager, String decision, String comments,
+			BigDecimal approvedAmount, BigDecimal interestRate, Integer tenureMonths, LocalDateTime decidedAt) {
+		super();
+		this.approvalId = approvalId;
+		this.application = application;
+		this.manager = manager;
+		this.decision = decision;
+		this.comments = comments;
+		this.approvedAmount = approvedAmount;
+		this.interestRate = interestRate;
+		this.tenureMonths = tenureMonths;
 		this.decidedAt = decidedAt;
 	}
 	

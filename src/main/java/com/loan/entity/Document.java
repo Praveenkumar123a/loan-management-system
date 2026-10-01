@@ -2,7 +2,14 @@ package com.loan.entity;
 
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "documents")
@@ -26,92 +33,71 @@ public class Document {
     private String remarks;
     @ManyToOne
     @JoinColumn(name = "verified_by")
-    private User verifyBy;
+    private User verifiedBy;
     @Column(name = "verified_at")
     private LocalDateTime verifiedAt;
     @CreationTimestamp
     @Column(name = "uploaded_at", nullable = false, updatable = false)
     private LocalDateTime uploadedAt;
-
     public Document() {
     }
-
     public Integer getDocumentId() {
         return documentId;
     }
-
     public void setDocumentId(Integer documentId) {
         this.documentId = documentId;
     }
-
     public LoanApplication getApplication() {
         return application;
     }
-
     public void setApplication(LoanApplication application) {
         this.application = application;
     }
-
     public String getDocumentType() {
         return documentType;
     }
-
     public void setDocumentType(String documentType) {
         this.documentType = documentType;
     }
-
     public String getFileName() {
         return fileName;
     }
-
     public void setFileName(String fileName) {
         this.fileName = fileName;
     }
-
     public String getFilePath() {
         return filePath;
     }
-
     public void setFilePath(String filePath) {
         this.filePath = filePath;
     }
-
     public String getVerificationStatus() {
         return verificationStatus;
     }
-
     public void setVerificationStatus(String verificationStatus) {
         this.verificationStatus = verificationStatus;
     }
-
     public String getRemarks() {
         return remarks;
     }
-
     public void setRemarks(String remarks) {
         this.remarks = remarks;
     }
-
-    public User getVerifyBy() {
-        return verifyBy;
+    public User getVerifiedBy() {
+        return verifiedBy;
     }
-
-    public void setVerifyBy(User verifyBy) {
-        this.verifyBy = verifyBy;
+    public void setVerifiedBy(User verifiedBy) {
+        this.verifiedBy = verifiedBy;
     }
-
     public LocalDateTime getVerifiedAt() {
         return verifiedAt;
     }
-
     public void setVerifiedAt(LocalDateTime verifiedAt) {
         this.verifiedAt = verifiedAt;
     }
-
     public LocalDateTime getUploadedAt() {
         return uploadedAt;
     }
-
     public void setUploadedAt(LocalDateTime uploadedAt) {
         this.uploadedAt = uploadedAt;
     }
