@@ -1,5 +1,11 @@
 package com.loan.repository;
 
-public interface LoanProductRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.loan.entity.LoanProduct;
+
+@Repository 
+public interface LoanProductRepository extends JpaRepository<LoanProduct,Integer> {
 
 }
