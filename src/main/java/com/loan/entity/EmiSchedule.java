@@ -2,6 +2,9 @@ package com.loan.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import com.loan.utils.EmiStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.loan.entity.Payment;
 
-@Repository 
-public interface PaymentRepository extends JpaRepository<Payment,Integer> {
-    
+@Repository
+public interface PaymentRepository extends JpaRepository<Payment, Integer> {
+
 }
