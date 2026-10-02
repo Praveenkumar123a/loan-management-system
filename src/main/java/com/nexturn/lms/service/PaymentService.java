@@ -1,5 +1,13 @@
 package com.nexturn.lms.service;
 
-public interface PaymentService {
+import java.util.List;
 
+import com.nexturn.lms.entity.Payment;
+
+public interface PaymentService {
+    Payment makePayment(Payment payment);
+
+    Payment getPaymentById(Integer paymentId);
+
+    List<Payment> getPaymentsByEmi(Integer emiId);
 }
