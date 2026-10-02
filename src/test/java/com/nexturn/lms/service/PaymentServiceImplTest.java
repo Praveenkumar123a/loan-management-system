@@ -1,4 +1,4 @@
-package com.loan.service;
+package com.nexturn.lms.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -21,9 +21,6 @@ import com.nexturn.lms.entity.Payment;
 import com.nexturn.lms.entity.User;
 import com.nexturn.lms.repository.EmiScheduleRepository;
 import com.nexturn.lms.repository.PaymentRepository;
-import com.nexturn.lms.service.AuditLogService;
-import com.nexturn.lms.service.NotificationService;
-import com.nexturn.lms.service.PaymentServiceImpl;
 import com.nexturn.lms.utils.EmiStatus;
 
 @ExtendWith(MockitoExtension.class)

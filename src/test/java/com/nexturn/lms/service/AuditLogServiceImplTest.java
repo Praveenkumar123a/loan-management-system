@@ -1,4 +1,4 @@
-package com.loan.service;
+package com.nexturn.lms.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -15,7 +15,6 @@ import com.nexturn.lms.entity.User;
 import com.nexturn.lms.repository.AuditLogRepository;
 import com.nexturn.lms.repository.LoanApplicationRepository;
 import com.nexturn.lms.repository.UserRepository;
-import com.nexturn.lms.service.AuditLogServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class AuditLogServiceImplTest {

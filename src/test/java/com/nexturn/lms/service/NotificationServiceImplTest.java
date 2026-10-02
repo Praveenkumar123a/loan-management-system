@@ -1,4 +1,4 @@
-package com.loan.service;
+package com.nexturn.lms.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -19,7 +19,6 @@ import com.nexturn.lms.entity.User;
 import com.nexturn.lms.repository.EmiScheduleRepository;
 import com.nexturn.lms.repository.NotificationRepository;
 import com.nexturn.lms.repository.UserRepository;
-import com.nexturn.lms.service.NotificationServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceImplTest {
