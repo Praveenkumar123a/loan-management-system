@@ -3,7 +3,6 @@ package com.nexturn.lms.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nexturn.lms.entity.User;
@@ -13,51 +12,63 @@ import com.nexturn.lms.repository.UserRepository;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    UserRepository repo;
+    private final UserRepository userRepository;
 
-    @Override
-    public String addUser(User user) {
-        User u = repo.save(user);
-        String str = "User inserted " + u.getUserId();
-        return str;
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Override
-    public String updateUser(User user) {
-        repo.save(user);
-        String str = "User updated";
-        return str;
+    public User createUser(User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        return userRepository.save(user);
     }
 
     @Override
-    public String removeUser(Long userId) {
-        repo.deleteById(userId);
-        return "User deleted";
+    public List<User> getAllUsers() {
+
+        return userRepository.findAll();
     }
 
     @Override
-    public List<User> findAllUsers() {
-        return repo.findAll();
+    public Optional<User> getUserById(Integer userId) {
+
+        return userRepository.findById(userId);
     }
 
     @Override
-    public User findUserById(Long userId) {
-        Optional<User> user = repo.findById(userId);
+    public Optional<User> getUserByEmail(String email) {
 
-        if (user.isEmpty())
-            throw new UserNotFoundException();
-
-        return user.get();
+        return userRepository.findByEmail(email);
     }
 
     @Override
-    public User findUserByEmail(String email) {
-        Optional<User> user = repo.findByEmail(email);
+    public User updateUser(Integer userId, User user) {
 
-        if (user.isEmpty())
-            throw new UserNotFoundException();
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found"));
 
-        return user.get();
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
+        existingUser.setEmail(user.getEmail());
+        existingUser.setPassword(user.getPassword());
+        existingUser.setRole(user.getRole());
+
+        return userRepository.save(existingUser);
+    }
+
+    @Override
+    public void deleteUser(Integer userId) {
+
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found"));
+
+        userRepository.delete(existingUser);
     }
 }

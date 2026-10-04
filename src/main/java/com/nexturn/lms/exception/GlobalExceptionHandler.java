@@ -8,85 +8,102 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(PaymentNotFoundException.class)
-    public ResponseEntity<String> handlePaymentNotFound(
-            PaymentNotFoundException ex) {
+        @ExceptionHandler(PaymentNotFoundException.class)
+        public ResponseEntity<String> handlePaymentNotFound(
+                        PaymentNotFoundException ex) {
 
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
-    }
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(ex.getMessage());
+        }
 
-    @ExceptionHandler(EmiScheduleNotFoundException.class)
-    public ResponseEntity<String> handleEmiScheduleNotFound(
-            EmiScheduleNotFoundException ex) {
+        @ExceptionHandler(EmiScheduleNotFoundException.class)
+        public ResponseEntity<String> handleEmiScheduleNotFound(
+                        EmiScheduleNotFoundException ex) {
 
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
-    }
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(ex.getMessage());
+        }
 
-    @ExceptionHandler(NotificationNotFoundException.class)
-    public ResponseEntity<String> handleNotificationNotFound(
-            NotificationNotFoundException ex) {
+        @ExceptionHandler(NotificationNotFoundException.class)
+        public ResponseEntity<String> handleNotificationNotFound(
+                        NotificationNotFoundException ex) {
 
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
-    }
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(ex.getMessage());
+        }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> handleUserNotFound(
-            UserNotFoundException ex) {
+        @ExceptionHandler(UserNotFoundException.class)
+        public ResponseEntity<String> handleUserNotFound(
+                        UserNotFoundException ex) {
 
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
-    }
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(ex.getMessage());
+        }
 
-    @ExceptionHandler(LoanApplicationNotFoundException.class)
-    public ResponseEntity<String> handleLoanApplicationNotFound(
-            LoanApplicationNotFoundException ex) {
+        @ExceptionHandler(LoanApplicationNotFoundException.class)
+        public ResponseEntity<String> handleLoanApplicationNotFound(
+                        LoanApplicationNotFoundException ex) {
 
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
-    }
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(ex.getMessage());
+        }
 
-    @ExceptionHandler(AuditLogNotFoundException.class)
-    public ResponseEntity<String> handleAuditLogNotFound(
-            AuditLogNotFoundException ex) {
+        @ExceptionHandler(AuditLogNotFoundException.class)
+        public ResponseEntity<String> handleAuditLogNotFound(
+                        AuditLogNotFoundException ex) {
 
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
-    }
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(ex.getMessage());
+        }
 
+        @ExceptionHandler(InvalidPaymentException.class)
+        public ResponseEntity<String> handleInvalidPayment(
+                        InvalidPaymentException ex) {
 
-    @ExceptionHandler(InvalidPaymentException.class)
-    public ResponseEntity<String> handleInvalidPayment(
-            InvalidPaymentException ex) {
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(ex.getMessage());
+        }
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
-    }
+        @ExceptionHandler(InvalidNotificationException.class)
+        public ResponseEntity<String> handleInvalidNotification(
+                        InvalidNotificationException ex) {
 
-    @ExceptionHandler(InvalidNotificationException.class)
-    public ResponseEntity<String> handleInvalidNotification(
-            InvalidNotificationException ex) {
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(ex.getMessage());
+        }
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
-    }
+        @ExceptionHandler(InvalidAuditLogException.class)
+        public ResponseEntity<String> handleInvalidAuditLog(
+                        InvalidAuditLogException ex) {
 
-    @ExceptionHandler(InvalidAuditLogException.class)
-    public ResponseEntity<String> handleInvalidAuditLog(
-            InvalidAuditLogException ex) {
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(ex.getMessage());
+        }
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
-    }
+        @ExceptionHandler(ApplicantProfileNotFoundException.class)
+        public ResponseEntity<String> handleApplicantProfileNotFound(
+                        ApplicantProfileNotFoundException ex) {
+
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(ex.getMessage());
+        }
+
+        @ExceptionHandler(DocumentNotFoundException.class)
+public ResponseEntity<String> handleDocumentNotFound(
+        DocumentNotFoundException ex) {
+
+    return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ex.getMessage());
+}
 }

@@ -1,9 +1,7 @@
 package com.nexturn.lms.service;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nexturn.lms.entity.LoanApplication;
@@ -13,41 +11,82 @@ import com.nexturn.lms.repository.LoanApplicationRepository;
 @Service
 public class LoanApplicationServiceImpl implements LoanApplicationService {
 
-    @Autowired
-    LoanApplicationRepository repo;
+    private final LoanApplicationRepository loanApplicationRepository;
 
-    @Override
-    public String addLoanApplication(LoanApplication application) {
-        LoanApplication app = repo.save(application);
-        String str = "Loan application inserted " + app.getApplicationId();
-        return str;
+    public LoanApplicationServiceImpl(
+            LoanApplicationRepository loanApplicationRepository) {
+
+        this.loanApplicationRepository = loanApplicationRepository;
     }
 
     @Override
-    public String updateLoanApplication(LoanApplication application) {
-        repo.save(application);
-        String str = "Loan application updated";
-        return str;
+    public LoanApplication createApplication(
+            LoanApplication application) {
+
+        if (application == null) {
+            throw new IllegalArgumentException(
+                    "Loan application cannot be null");
+        }
+
+        return loanApplicationRepository.save(application);
     }
 
     @Override
-    public String removeLoanApplication(Long applicationId) {
-        repo.deleteById(applicationId);
-        return "Loan application deleted";
+    public List<LoanApplication> getAllApplications() {
+
+        return loanApplicationRepository.findAll();
     }
 
     @Override
-    public List<LoanApplication> findAllLoanApplications() {
-        return repo.findAll();
+    public LoanApplication getApplicationById(
+            Integer applicationId) {
+
+        return loanApplicationRepository.findById(applicationId)
+                .orElseThrow(() ->
+                        new LoanApplicationNotFoundException(
+                                "Loan application not found"));
     }
 
     @Override
-    public LoanApplication findLoanApplicationById(Long applicationId) {
-        Optional<LoanApplication> application = repo.findById(applicationId);
+    public LoanApplication updateApplication(
+            Integer applicationId,
+            LoanApplication application) {
 
-        if (application.isEmpty())
-            throw new LoanApplicationNotFoundException();
+        LoanApplication existingApplication =
+                loanApplicationRepository.findById(applicationId)
+                        .orElseThrow(() ->
+                                new LoanApplicationNotFoundException(
+                                        "Loan application not found"));
 
-        return application.get();
+        existingApplication.setRequestedAmount(
+                application.getRequestedAmount());
+
+        existingApplication.setTenureMonths(
+                application.getTenureMonths());
+
+        existingApplication.setPurpose(
+                application.getPurpose());
+
+        existingApplication.setEligibilityScore(
+                application.getEligibilityScore());
+
+        existingApplication.setStatus(
+                application.getStatus());
+
+        return loanApplicationRepository.save(
+                existingApplication);
+    }
+
+    @Override
+    public void deleteApplication(
+            Integer applicationId) {
+
+        LoanApplication existingApplication =
+                loanApplicationRepository.findById(applicationId)
+                        .orElseThrow(() ->
+                                new LoanApplicationNotFoundException(
+                                        "Loan application not found"));
+
+        loanApplicationRepository.delete(existingApplication);
     }
 }

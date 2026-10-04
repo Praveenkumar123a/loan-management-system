@@ -6,9 +6,15 @@ import com.nexturn.lms.entity.ApplicantProfile;
 
 public interface ApplicantProfileService {
 
-    String addApplicantProfile(ApplicantProfile profile);
-    String updateApplicantProfile(ApplicantProfile profile);
-    String removeApplicantProfile(Long profileId);
-    List<ApplicantProfile> findAllApplicantProfiles();
-    ApplicantProfile findApplicantProfileById(Long profileId);
+    ApplicantProfile createProfile(ApplicantProfile profile);
+
+    List<ApplicantProfile> getAllProfiles();
+
+    ApplicantProfile getProfileById(Integer profileId);
+
+    ApplicantProfile updateProfile(
+            Integer profileId,
+            ApplicantProfile profile);
+
+    void deleteProfile(Integer profileId);
 }

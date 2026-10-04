@@ -6,9 +6,15 @@ import com.nexturn.lms.entity.LoanApplication;
 
 public interface LoanApplicationService {
 
-    String addLoanApplication(LoanApplication application);
-    String updateLoanApplication(LoanApplication application);
-    String removeLoanApplication(Long applicationId);
-    List<LoanApplication> findAllLoanApplications();
-    LoanApplication findLoanApplicationById(Long applicationId);
+    LoanApplication createApplication(LoanApplication application);
+
+    List<LoanApplication> getAllApplications();
+
+    LoanApplication getApplicationById(Integer applicationId);
+
+    LoanApplication updateApplication(
+            Integer applicationId,
+            LoanApplication application);
+
+    void deleteApplication(Integer applicationId);
 }

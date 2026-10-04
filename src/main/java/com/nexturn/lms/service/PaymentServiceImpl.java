@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.nexturn.lms.entity.AuditLog;
 import com.nexturn.lms.entity.EmiSchedule;
+import com.nexturn.lms.entity.LoanProduct;
 import com.nexturn.lms.entity.Notification;
 import com.nexturn.lms.entity.Payment;
 import com.nexturn.lms.entity.User;
@@ -66,7 +67,9 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // 2. Validate EMI schedule
-        if (payment.getEmiSchedule() == null) {
+        if (payment.getEmiSchedule() == null
+                || payment.getEmiSchedule().getEmiId() == null) {
+
             throw new InvalidPaymentException(
                     "EMI schedule is required");
         }
@@ -87,18 +90,24 @@ public class PaymentServiceImpl implements PaymentService {
                     "Payment amount must be greater than zero");
         }
 
-        // 5. Generate transaction reference
+        // 5. Validate EMI amount
+        if (emi.getEmiAmount() == null) {
+            throw new InvalidPaymentException(
+                    "EMI amount is not configured");
+        }
+
+        // 6. Generate transaction reference
         String transactionRef = "TXN-" + UUID.randomUUID();
 
         payment.setTransactionRef(transactionRef);
 
-        // 6. Set payment date if not provided
+        // 7. Set payment date if not provided
         if (payment.getPaymentDate() == null) {
             payment.setPaymentDate(LocalDateTime.now());
         }
 
         /*
-         * 7. Calculate late payment penalty
+         * 8. Calculate late payment penalty
          */
 
         BigDecimal penalty = BigDecimal.ZERO;
@@ -109,19 +118,58 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (lateDays > 0) {
 
-            // Temporary penalty policy:
-            // ₹100 per late day
-            BigDecimal dailyPenalty = new BigDecimal("100");
+            LoanProduct loanProduct = emi.getDisbursement()
+                    .getApplication()
+                    .getProduct();
 
-            penalty = dailyPenalty.multiply(
-                    BigDecimal.valueOf(lateDays));
+            if (loanProduct == null) {
+                throw new InvalidPaymentException(
+                        "Loan product is not configured");
+            }
+
+            if (loanProduct.getPenaltyType() == null
+                    || loanProduct.getPenaltyValue() == null) {
+
+                throw new InvalidPaymentException(
+                        "Penalty policy is not configured");
+            }
+
+            String penaltyType =
+                    loanProduct.getPenaltyType().trim().toUpperCase();
+
+            BigDecimal penaltyValue =
+                    loanProduct.getPenaltyValue();
+
+            if (penaltyValue.signum() < 0) {
+                throw new InvalidPaymentException(
+                        "Penalty value cannot be negative");
+            }
+
+            if ("DAILY".equals(penaltyType)) {
+
+                penalty = penaltyValue.multiply(
+                        BigDecimal.valueOf(lateDays));
+
+            } else if ("PERCENTAGE".equals(penaltyType)) {
+
+                penalty = emi.getEmiAmount()
+                        .multiply(penaltyValue)
+                        .divide(
+                                BigDecimal.valueOf(100));
+
+            } else {
+
+                throw new InvalidPaymentException(
+                        "Unsupported penalty type: "
+                                + loanProduct.getPenaltyType());
+            }
         }
 
         payment.setPenaltyPaid(penalty);
         emi.setPenaltyAmount(penalty);
 
         /*
-         * 8. Calculate previous amount paid
+         * 9. Calculate previous amount paid
          */
 
         BigDecimal previousPaid =
@@ -132,21 +180,42 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         /*
-         * 9. Calculate total amount paid
+         * 10. Calculate total amount paid
          */
 
         BigDecimal totalPaid =
                 previousPaid.add(payment.getAmountPaid());
 
         /*
-         * 10. Calculate total amount due
+         * 11. Calculate total amount due
          */
 
         BigDecimal totalDue =
                 emi.getEmiAmount().add(penalty);
 
         /*
-         * 11. Check whether EMI is completely paid
+         * 12. Update outstanding balance
+         */
+
+        BigDecimal currentOutstanding =
+                emi.getOutstandingBalance();
+
+        if (currentOutstanding == null) {
+            currentOutstanding = emi.getEmiAmount();
+        }
+
+        BigDecimal newOutstanding =
+                currentOutstanding.subtract(
+                        payment.getAmountPaid());
+
+        if (newOutstanding.signum() < 0) {
+            newOutstanding = BigDecimal.ZERO;
+        }
+
+        emi.setOutstandingBalance(newOutstanding);
+
+        /*
+         * 13. Check whether EMI is completely paid
          */
 
         if (totalPaid.compareTo(totalDue) >= 0) {
@@ -158,26 +227,26 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         /*
-         * 12. Attach EMI to payment
+         * 14. Attach updated EMI to payment
          */
 
         payment.setEmiSchedule(emi);
 
         /*
-         * 13. Save payment
+         * 15. Save updated EMI
+         */
+
+        emiScheduleRepository.save(emi);
+
+        /*
+         * 16. Save payment
          */
 
         Payment savedPayment =
                 paymentRepository.save(payment);
 
         /*
-         * 14. Save updated EMI
-         */
-
-        emiScheduleRepository.save(emi);
-
-        /*
-         * 15. Get applicant
+         * 17. Get applicant
          */
 
         User applicant = emi.getDisbursement()
@@ -185,7 +254,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .getApplicant();
 
         /*
-         * 16. Create Audit Log
+         * 18. Create Audit Log
          */
 
         AuditLog auditLog = new AuditLog();
@@ -206,7 +275,7 @@ public class PaymentServiceImpl implements PaymentService {
         auditLogService.createAuditLog(auditLog);
 
         /*
-         * 17. Create Notification
+         * 19. Create Notification
          */
 
         Notification notification = new Notification();
@@ -223,7 +292,7 @@ public class PaymentServiceImpl implements PaymentService {
         notificationService.createNotification(notification);
 
         /*
-         * 18. Return saved payment
+         * 20. Return saved payment
          */
 
         return savedPayment;
