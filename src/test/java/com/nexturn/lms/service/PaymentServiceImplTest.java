@@ -377,7 +377,7 @@ class PaymentServiceImplTest {
                         () -> paymentService.makePayment(payment));
 
         org.junit.jupiter.api.Assertions.assertEquals(
-                "EMI not found",
+                "EMI schedule not found",
                 exception.getMessage());
 
         verify(emiScheduleRepository, times(1))

@@ -7,6 +7,10 @@ import org.springframework.stereotype.Service;
 import com.nexturn.lms.entity.AuditLog;
 import com.nexturn.lms.entity.LoanApplication;
 import com.nexturn.lms.entity.User;
+import com.nexturn.lms.exception.AuditLogNotFoundException;
+import com.nexturn.lms.exception.InvalidAuditLogException;
+import com.nexturn.lms.exception.LoanApplicationNotFoundException;
+import com.nexturn.lms.exception.UserNotFoundException;
 import com.nexturn.lms.repository.AuditLogRepository;
 import com.nexturn.lms.repository.LoanApplicationRepository;
 import com.nexturn.lms.repository.UserRepository;
@@ -32,17 +36,20 @@ public class AuditLogServiceImpl implements AuditLogService {
     public AuditLog createAuditLog(AuditLog auditLog) {
 
         if (auditLog == null) {
-            throw new RuntimeException("Audit log cannot be null");
+            throw new InvalidAuditLogException(
+                    "Audit log cannot be null");
         }
 
         if (auditLog.getUser() == null) {
-            throw new RuntimeException("User is required");
+            throw new InvalidAuditLogException(
+                    "User is required");
         }
 
         if (auditLog.getAction() == null ||
                 auditLog.getAction().isBlank()) {
 
-            throw new RuntimeException("Audit action is required");
+            throw new InvalidAuditLogException(
+                    "Audit action is required");
         }
 
         return auditLogRepository.save(auditLog);
@@ -53,7 +60,8 @@ public class AuditLogServiceImpl implements AuditLogService {
 
         return auditLogRepository.findById(logId)
                 .orElseThrow(() ->
-                        new RuntimeException("Audit log not found"));
+                        new AuditLogNotFoundException(
+                                "Audit log not found"));
     }
 
     @Override
@@ -61,7 +69,8 @@ public class AuditLogServiceImpl implements AuditLogService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new UserNotFoundException(
+                                "User not found"));
 
         return auditLogRepository.findByUser(user);
     }
@@ -73,7 +82,7 @@ public class AuditLogServiceImpl implements AuditLogService {
         LoanApplication application =
                 loanApplicationRepository.findById(applicationId)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new LoanApplicationNotFoundException(
                                         "Loan application not found"));
 
         return auditLogRepository.findByApplication(application);

@@ -14,6 +14,9 @@ import com.nexturn.lms.entity.EmiSchedule;
 import com.nexturn.lms.entity.Notification;
 import com.nexturn.lms.entity.Payment;
 import com.nexturn.lms.entity.User;
+import com.nexturn.lms.exception.EmiScheduleNotFoundException;
+import com.nexturn.lms.exception.InvalidPaymentException;
+import com.nexturn.lms.exception.PaymentNotFoundException;
 import com.nexturn.lms.repository.EmiScheduleRepository;
 import com.nexturn.lms.repository.PaymentRepository;
 import com.nexturn.lms.utils.EmiStatus;
@@ -42,7 +45,8 @@ public class PaymentServiceImpl implements PaymentService {
     public Payment getPaymentById(Integer paymentId) {
 
         return paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElseThrow(() ->
+                        new PaymentNotFoundException("Payment not found"));
     }
 
     @Override
@@ -57,25 +61,29 @@ public class PaymentServiceImpl implements PaymentService {
 
         // 1. Validate payment
         if (payment == null) {
-            throw new RuntimeException("Payment cannot be null");
+            throw new InvalidPaymentException(
+                    "Payment cannot be null");
         }
 
         // 2. Validate EMI schedule
         if (payment.getEmiSchedule() == null) {
-            throw new RuntimeException("EMI schedule is required");
+            throw new InvalidPaymentException(
+                    "EMI schedule is required");
         }
 
         Integer emiId = payment.getEmiSchedule().getEmiId();
 
         // 3. Find EMI
         EmiSchedule emi = emiScheduleRepository.findById(emiId)
-                .orElseThrow(() -> new RuntimeException("EMI not found"));
+                .orElseThrow(() ->
+                        new EmiScheduleNotFoundException(
+                                "EMI schedule not found"));
 
         // 4. Validate payment amount
         if (payment.getAmountPaid() == null
                 || payment.getAmountPaid().signum() <= 0) {
 
-            throw new RuntimeException(
+            throw new InvalidPaymentException(
                     "Payment amount must be greater than zero");
         }
 
@@ -125,7 +133,6 @@ public class PaymentServiceImpl implements PaymentService {
 
         /*
          * 9. Calculate total amount paid
-         *    including current payment
          */
 
         BigDecimal totalPaid =
