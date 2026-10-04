@@ -1,49 +1,116 @@
 package com.nexturn.lms.service;
 
 import java.util.List;
-import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
+
 import com.nexturn.lms.entity.Document;
+import com.nexturn.lms.entity.LoanApplication;
+import com.nexturn.lms.exception.DocumentNotFoundException;
+import com.nexturn.lms.exception.LoanApplicationNotFoundException;
 import com.nexturn.lms.repository.DocumentRepository;
+import com.nexturn.lms.repository.LoanApplicationRepository;
 
 @Service
 public class DocumentServiceImpl implements DocumentService {
 
-    @Autowired
-    DocumentRepository repo;
+    private final DocumentRepository documentRepository;
+    private final LoanApplicationRepository loanApplicationRepository;
 
-    @Override
-    public String addDocument(Document document) {
-        Document doc = repo.save(document);
-        String str = "Document inserted " + doc.getDocumentId();
-        return str;
+    public DocumentServiceImpl(
+            DocumentRepository documentRepository,
+            LoanApplicationRepository loanApplicationRepository) {
+
+        this.documentRepository = documentRepository;
+        this.loanApplicationRepository = loanApplicationRepository;
     }
 
     @Override
-    public String updateDocument(Document document) {
-        repo.save(document);
-        String str = "Document updated";
-        return str;
-    }
+    public Document uploadDocument(Document document) {
 
-    @Override
-    public String removeDocument(Integer documentId) {
-        repo.deleteById(documentId);
-        return "Document deleted";
-    }
-
-    @Override
-    public List<Document> findAllDocuments() {
-        return repo.findAll();
-    }
-
-    @Override
-    public Document findDocumentById(Integer documentId) {
-        Optional<Document> document = repo.findById(documentId);
-        if (document.isEmpty()) {
-            return null;
+        if (document == null) {
+            throw new IllegalArgumentException(
+                    "Document cannot be null");
         }
-        return document.get();
+
+        return documentRepository.save(document);
+    }
+
+    @Override
+    public List<Document> getAllDocuments() {
+
+        return documentRepository.findAll();
+    }
+
+    @Override
+    public Document getDocumentById(Integer documentId) {
+
+        return documentRepository.findById(documentId)
+                .orElseThrow(() ->
+                        new DocumentNotFoundException(
+                                "Document not found"));
+    }
+
+    @Override
+    public List<Document> getDocumentsByApplication(
+            Integer applicationId) {
+
+        LoanApplication application =
+                loanApplicationRepository.findById(applicationId)
+                        .orElseThrow(() ->
+                                new LoanApplicationNotFoundException(
+                                        "Loan application not found"));
+
+        return documentRepository.findByApplication(application);
+    }
+
+    @Override
+    public Document updateDocument(
+            Integer documentId,
+            Document document) {
+
+        Document existingDocument =
+                documentRepository.findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found"));
+
+        existingDocument.setApplication(
+                document.getApplication());
+
+        existingDocument.setDocumentType(
+                document.getDocumentType());
+
+        existingDocument.setFileName(
+                document.getFileName());
+
+        existingDocument.setFilePath(
+                document.getFilePath());
+
+        existingDocument.setVerificationStatus(
+                document.getVerificationStatus());
+
+        existingDocument.setRemarks(
+                document.getRemarks());
+
+        existingDocument.setVerifiedBy(
+                document.getVerifiedBy());
+
+        existingDocument.setVerifiedAt(
+                document.getVerifiedAt());
+
+        return documentRepository.save(existingDocument);
+    }
+
+    @Override
+    public void deleteDocument(Integer documentId) {
+
+        Document existingDocument =
+                documentRepository.findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found"));
+
+        documentRepository.delete(existingDocument);
     }
 }

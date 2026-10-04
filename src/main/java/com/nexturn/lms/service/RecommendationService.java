@@ -1,12 +1,25 @@
 package com.nexturn.lms.service;
 
 import java.util.List;
+
 import com.nexturn.lms.entity.Recommendation;
 
 public interface RecommendationService {
-    String addRecommendation(Recommendation recommendation);
-    String updateRecommendation(Recommendation recommendation);
-    String removeRecommendation(Integer recommendationId);
-    List<Recommendation> findAllRecommendations();
-    Recommendation findRecommendationById(Integer recommendationId);
+
+    Recommendation createRecommendation(
+            Recommendation recommendation);
+
+    List<Recommendation> getAllRecommendations();
+
+    Recommendation getRecommendationById(
+            Integer recommendationId);
+
+    List<Recommendation> getRecommendationsByApplication(
+            Integer applicationId);
+
+    Recommendation updateRecommendation(
+            Integer recommendationId,
+            Recommendation recommendation);
+
+    void deleteRecommendation(Integer recommendationId);
 }

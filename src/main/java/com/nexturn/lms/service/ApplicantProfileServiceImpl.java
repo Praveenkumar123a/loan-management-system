@@ -1,9 +1,7 @@
 package com.nexturn.lms.service;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nexturn.lms.entity.ApplicantProfile;
@@ -13,41 +11,82 @@ import com.nexturn.lms.repository.ApplicantProfileRepository;
 @Service
 public class ApplicantProfileServiceImpl implements ApplicantProfileService {
 
-    @Autowired
-    ApplicantProfileRepository repo;
+    private final ApplicantProfileRepository applicantProfileRepository;
 
-    @Override
-    public String addApplicantProfile(ApplicantProfile profile) {
-        ApplicantProfile ap = repo.save(profile);
-        String str = "Applicant profile inserted " + ap.getProfileId();
-        return str;
+    public ApplicantProfileServiceImpl(
+            ApplicantProfileRepository applicantProfileRepository) {
+
+        this.applicantProfileRepository = applicantProfileRepository;
     }
 
     @Override
-    public String updateApplicantProfile(ApplicantProfile profile) {
-        repo.save(profile);
-        String str = "Applicant profile updated";
-        return str;
+    public ApplicantProfile createProfile(
+            ApplicantProfile profile) {
+
+        if (profile == null) {
+            throw new IllegalArgumentException(
+                    "Applicant profile cannot be null");
+        }
+
+        return applicantProfileRepository.save(profile);
     }
 
     @Override
-    public String removeApplicantProfile(Long profileId) {
-        repo.deleteById(profileId);
-        return "Applicant profile deleted";
+    public List<ApplicantProfile> getAllProfiles() {
+
+        return applicantProfileRepository.findAll();
     }
 
     @Override
-    public List<ApplicantProfile> findAllApplicantProfiles() {
-        return repo.findAll();
+    public ApplicantProfile getProfileById(
+            Integer profileId) {
+
+        return applicantProfileRepository.findById(profileId)
+                .orElseThrow(() ->
+                        new ApplicantProfileNotFoundException(
+                                "Applicant profile not found"));
     }
 
     @Override
-    public ApplicantProfile findApplicantProfileById(Long profileId) {
-        Optional<ApplicantProfile> profile = repo.findById(profileId);
+    public ApplicantProfile updateProfile(
+            Integer profileId,
+            ApplicantProfile profile) {
 
-        if (profile.isEmpty())
-            throw new ApplicantProfileNotFoundException();
+        ApplicantProfile existingProfile =
+                applicantProfileRepository.findById(profileId)
+                        .orElseThrow(() ->
+                                new ApplicantProfileNotFoundException(
+                                        "Applicant profile not found"));
 
-        return profile.get();
+        existingProfile.setUser(profile.getUser());
+        existingProfile.setDateOfBirth(
+                profile.getDateOfBirth());
+        existingProfile.setAddress(
+                profile.getAddress());
+        existingProfile.setPanNumber(
+                profile.getPanNumber());
+        existingProfile.setAadhaarNumber(
+                profile.getAadhaarNumber());
+        existingProfile.setEmploymentType(
+                profile.getEmploymentType());
+        existingProfile.setMonthlyIncome(
+                profile.getMonthlyIncome());
+        existingProfile.setExistingLiabilities(
+                profile.getExistingLiabilities());
+
+        return applicantProfileRepository.save(
+                existingProfile);
+    }
+
+    @Override
+    public void deleteProfile(Integer profileId) {
+
+        ApplicantProfile existingProfile =
+                applicantProfileRepository.findById(profileId)
+                        .orElseThrow(() ->
+                                new ApplicantProfileNotFoundException(
+                                        "Applicant profile not found"));
+
+        applicantProfileRepository.delete(existingProfile);
     }
 }

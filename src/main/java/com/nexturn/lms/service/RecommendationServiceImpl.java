@@ -1,49 +1,103 @@
 package com.nexturn.lms.service;
 
 import java.util.List;
-import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
+
 import com.nexturn.lms.entity.Recommendation;
 import com.nexturn.lms.repository.RecommendationRepository;
 
 @Service
-public class RecommendationServiceImpl implements RecommendationService {
+public class RecommendationServiceImpl
+        implements RecommendationService {
 
-    @Autowired
-    RecommendationRepository repo;
+    private final RecommendationRepository recommendationRepository;
 
-    @Override
-    public String addRecommendation(Recommendation recommendation) {
-        Recommendation rec = repo.save(recommendation);
-        String str = "Recommendation inserted "+ rec.getRecommendationId();
-        return str;
+    public RecommendationServiceImpl(
+            RecommendationRepository recommendationRepository) {
+
+        this.recommendationRepository = recommendationRepository;
     }
 
     @Override
-    public String updateRecommendation(Recommendation recommendation) {
-        repo.save(recommendation);
-        String str = "Recommendation updated";
-        return str;
-    }
+    public Recommendation createRecommendation(
+            Recommendation recommendation) {
 
-    @Override
-    public String removeRecommendation(Integer recommendationId) {
-        repo.deleteById(recommendationId);
-        return "Recommendation deleted";
-    }
-
-    @Override
-    public List<Recommendation> findAllRecommendations() {
-        return repo.findAll();
-    }
-
-    @Override
-    public Recommendation findRecommendationById(Integer recommendationId) {
-        Optional<Recommendation> recommendation =repo.findById(recommendationId);
-        if (recommendation.isEmpty()) {
-            return null;
+        if (recommendation == null) {
+            throw new IllegalArgumentException(
+                    "Recommendation cannot be null");
         }
-        return recommendation.get();
+
+        return recommendationRepository.save(recommendation);
+    }
+
+    @Override
+    public List<Recommendation> getAllRecommendations() {
+
+        return recommendationRepository.findAll();
+    }
+
+    @Override
+    public Recommendation getRecommendationById(
+            Integer recommendationId) {
+
+        return recommendationRepository.findById(recommendationId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Recommendation not found"));
+    }
+
+    @Override
+    public List<Recommendation> getRecommendationsByApplication(
+            Integer applicationId) {
+
+        return recommendationRepository.findAll()
+                .stream()
+                .filter(recommendation ->
+                        recommendation.getApplication() != null
+                        && recommendation.getApplication()
+                                .getApplicationId() == applicationId)
+                .toList();
+    }
+
+    @Override
+    public Recommendation updateRecommendation(
+            Integer recommendationId,
+            Recommendation recommendation) {
+
+        Recommendation existingRecommendation =
+                recommendationRepository.findById(recommendationId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Recommendation not found"));
+
+        existingRecommendation.setApplication(
+                recommendation.getApplication());
+
+        existingRecommendation.setOfficer(
+                recommendation.getOfficer());
+
+        existingRecommendation.setDecision(
+                recommendation.getDecision());
+
+        existingRecommendation.setComments(
+                recommendation.getComments());
+
+        return recommendationRepository.save(
+                existingRecommendation);
+    }
+
+    @Override
+    public void deleteRecommendation(
+            Integer recommendationId) {
+
+        Recommendation existingRecommendation =
+                recommendationRepository.findById(recommendationId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Recommendation not found"));
+
+        recommendationRepository.delete(
+                existingRecommendation);
     }
 }
