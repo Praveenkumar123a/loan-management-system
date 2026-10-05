@@ -39,7 +39,7 @@ class EmiScheduleControllerTest {
     private MockMvc mockMvc;
 
     private Disbursement disbursement;
-    private EmiSchedule emi;
+    private EmiSchedule emiSchedule;
 
     @BeforeEach
     void setUp() {
@@ -49,26 +49,28 @@ class EmiScheduleControllerTest {
                 .build();
 
         disbursement = new Disbursement();
+        disbursement.setDisbursementId(1);
 
-        emi = new EmiSchedule();
+        emiSchedule = new EmiSchedule();
+        emiSchedule.setEmiId(1);
+        emiSchedule.setInstallmentNo(1);
     }
 
     @Test
-    void getByDisbursement_shouldReturnEmiList() throws Exception {
+    void getByDisbursement_shouldReturnEmiSchedules() throws Exception {
 
         when(disbursementRepository.findById(1))
                 .thenReturn(Optional.of(disbursement));
 
         when(emiScheduleService.getByDisbursement(disbursement))
-                .thenReturn(List.of(emi));
+                .thenReturn(List.of(emiSchedule));
 
         mockMvc.perform(
                 get("/api/emi/disbursement/1")
         )
         .andExpect(status().isOk());
 
-        verify(disbursementRepository)
-                .findById(1);
+        verify(disbursementRepository).findById(1);
 
         verify(emiScheduleService)
                 .getByDisbursement(disbursement);
@@ -78,7 +80,7 @@ class EmiScheduleControllerTest {
     void getOverdue_shouldReturnOverdueEmis() throws Exception {
 
         when(emiScheduleService.getOverdueEmis())
-                .thenReturn(List.of(emi));
+                .thenReturn(List.of(emiSchedule));
 
         mockMvc.perform(
                 get("/api/emi/overdue")
@@ -90,10 +92,10 @@ class EmiScheduleControllerTest {
     }
 
     @Test
-    void getById_shouldReturnEmi() throws Exception {
+    void getById_shouldReturnEmiSchedule() throws Exception {
 
         when(emiScheduleService.getById(1))
-                .thenReturn(emi);
+                .thenReturn(emiSchedule);
 
         mockMvc.perform(
                 get("/api/emi/1")

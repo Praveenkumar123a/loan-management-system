@@ -36,7 +36,7 @@ class ApplicantProfileControllerTest {
     private UserService userService;
 
     @InjectMocks
-    private ApplicantProfileController profileController;
+    private ApplicantProfileController applicantProfileController;
 
     private MockMvc mockMvc;
 
@@ -47,13 +47,15 @@ class ApplicantProfileControllerTest {
     void setUp() {
 
         mockMvc = MockMvcBuilders
-                .standaloneSetup(profileController)
+                .standaloneSetup(applicantProfileController)
                 .build();
 
         user = new User();
         user.setUserId(1);
 
         profile = new ApplicantProfile();
+        profile.setProfileId(1);
+        profile.setUser(user);
     }
 
     @Test
@@ -65,17 +67,17 @@ class ApplicantProfileControllerTest {
         when(profileService.createOrUpdateProfile(
                 org.mockito.ArgumentMatchers.eq(user),
                 org.mockito.ArgumentMatchers.any(LocalDate.class),
-                org.mockito.ArgumentMatchers.any(String.class),
-                org.mockito.ArgumentMatchers.any(String.class),
-                org.mockito.ArgumentMatchers.any(String.class),
-                org.mockito.ArgumentMatchers.any(String.class),
-                org.mockito.ArgumentMatchers.any(BigDecimal.class),
-                org.mockito.ArgumentMatchers.any(BigDecimal.class)
+                org.mockito.ArgumentMatchers.eq("Hyderabad"),
+                org.mockito.ArgumentMatchers.eq("ABCDE1234F"),
+                org.mockito.ArgumentMatchers.eq("123456789012"),
+                org.mockito.ArgumentMatchers.eq("SALARIED"),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("50000")),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("5000"))
         )).thenReturn(profile);
 
         String requestBody = """
                 {
-                    "dateOfBirth": "1998-05-10",
+                    "dateOfBirth": "1998-01-15",
                     "address": "Hyderabad",
                     "panNumber": "ABCDE1234F",
                     "aadhaarNumber": "123456789012",
@@ -92,20 +94,18 @@ class ApplicantProfileControllerTest {
         )
         .andExpect(status().isOk());
 
-        verify(userService)
-                .getById(1);
+        verify(userService).getById(1);
 
-        verify(profileService)
-                .createOrUpdateProfile(
-                        org.mockito.ArgumentMatchers.eq(user),
-                        LocalDate.of(1998, 5, 10),
-                        "Hyderabad",
-                        "ABCDE1234F",
-                        "123456789012",
-                        "SALARIED",
-                        new BigDecimal("50000"),
-                        new BigDecimal("5000")
-                );
+        verify(profileService).createOrUpdateProfile(
+                org.mockito.ArgumentMatchers.eq(user),
+                org.mockito.ArgumentMatchers.any(LocalDate.class),
+                org.mockito.ArgumentMatchers.eq("Hyderabad"),
+                org.mockito.ArgumentMatchers.eq("ABCDE1234F"),
+                org.mockito.ArgumentMatchers.eq("123456789012"),
+                org.mockito.ArgumentMatchers.eq("SALARIED"),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("50000")),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("5000"))
+        );
     }
 
     @Test
@@ -122,10 +122,8 @@ class ApplicantProfileControllerTest {
         )
         .andExpect(status().isOk());
 
-        verify(userService)
-                .getById(1);
+        verify(userService).getById(1);
 
-        verify(profileService)
-                .getByUser(user);
+        verify(profileService).getByUser(user);
     }
 }

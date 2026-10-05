@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import com.nexturn.lms.entity.EmiSchedule;
 import com.nexturn.lms.entity.Payment;
 import com.nexturn.lms.service.PaymentService;
 
@@ -32,6 +33,7 @@ class PaymentControllerTest {
     private MockMvc mockMvc;
 
     private Payment payment;
+    private EmiSchedule emiSchedule;
 
     @BeforeEach
     void setUp() {
@@ -40,7 +42,12 @@ class PaymentControllerTest {
                 .standaloneSetup(paymentController)
                 .build();
 
+        emiSchedule = new EmiSchedule();
+        emiSchedule.setEmiId(1);
+
         payment = new Payment();
+        payment.setPaymentId(1);
+        payment.setEmiSchedule(emiSchedule);
     }
 
     @Test
@@ -49,13 +56,13 @@ class PaymentControllerTest {
         when(paymentService.payEmi(
                 1,
                 "UPI",
-                "TXN-12345"
+                "TXN123"
         )).thenReturn(payment);
 
         String requestBody = """
                 {
                     "paymentMode": "UPI",
-                    "transactionRef": "TXN-12345"
+                    "transactionRef": "TXN123"
                 }
                 """;
 
@@ -66,11 +73,10 @@ class PaymentControllerTest {
         )
         .andExpect(status().isOk());
 
-        verify(paymentService)
-                .payEmi(
-                        1,
-                        "UPI",
-                        "TXN-12345"
-                );
+        verify(paymentService).payEmi(
+                1,
+                "UPI",
+                "TXN123"
+        );
     }
 }

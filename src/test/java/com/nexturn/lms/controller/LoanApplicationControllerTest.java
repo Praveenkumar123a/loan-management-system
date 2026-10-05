@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.nexturn.lms.entity.LoanApplication;
+import com.nexturn.lms.entity.LoanProduct;
 import com.nexturn.lms.entity.User;
 import com.nexturn.lms.service.LoanApplicationService;
 import com.nexturn.lms.service.UserService;
@@ -37,25 +38,31 @@ class LoanApplicationControllerTest {
     private UserService userService;
 
     @InjectMocks
-    private LoanApplicationController applicationController;
+    private LoanApplicationController loanApplicationController;
 
     private MockMvc mockMvc;
 
     private User applicant;
+    private LoanProduct product;
     private LoanApplication application;
 
     @BeforeEach
     void setUp() {
 
         mockMvc = MockMvcBuilders
-                .standaloneSetup(applicationController)
+                .standaloneSetup(loanApplicationController)
                 .build();
 
         applicant = new User();
         applicant.setUserId(1);
 
+        product = new LoanProduct();
+        product.setProductId(1);
+
         application = new LoanApplication();
-        application.setApplicationId(10);
+        application.setApplicationId(1);
+        application.setApplicant(applicant);
+        application.setProduct(product);
     }
 
     @Test
@@ -65,18 +72,18 @@ class LoanApplicationControllerTest {
                 .thenReturn(applicant);
 
         when(applicationService.submitApplication(
-                applicant,
-                5,
-                new BigDecimal("100000"),
-                24,
-                "Home renovation"
+                org.mockito.ArgumentMatchers.eq(applicant),
+                org.mockito.ArgumentMatchers.eq(1),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("500000")),
+                org.mockito.ArgumentMatchers.eq(60),
+                org.mockito.ArgumentMatchers.eq("Home renovation")
         )).thenReturn(application);
 
         String requestBody = """
                 {
-                    "productId": 5,
-                    "requestedAmount": 100000,
-                    "tenureMonths": 24,
+                    "productId": 1,
+                    "requestedAmount": 500000,
+                    "tenureMonths": 60,
                     "purpose": "Home renovation"
                 }
                 """;
@@ -88,32 +95,29 @@ class LoanApplicationControllerTest {
         )
         .andExpect(status().isOk());
 
-        verify(userService)
-                .getById(1);
+        verify(userService).getById(1);
 
-        verify(applicationService)
-                .submitApplication(
-                        applicant,
-                        5,
-                        new BigDecimal("100000"),
-                        24,
-                        "Home renovation"
-                );
+        verify(applicationService).submitApplication(
+                org.mockito.ArgumentMatchers.eq(applicant),
+                org.mockito.ArgumentMatchers.eq(1),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("500000")),
+                org.mockito.ArgumentMatchers.eq(60),
+                org.mockito.ArgumentMatchers.eq("Home renovation")
+        );
     }
 
     @Test
     void getById_shouldReturnApplication() throws Exception {
 
-        when(applicationService.getById(10))
+        when(applicationService.getById(1))
                 .thenReturn(application);
 
         mockMvc.perform(
-                get("/api/applications/10")
+                get("/api/applications/1")
         )
         .andExpect(status().isOk());
 
-        verify(applicationService)
-                .getById(10);
+        verify(applicationService).getById(1);
     }
 
     @Test
@@ -134,7 +138,11 @@ class LoanApplicationControllerTest {
     @Test
     void getByStatus_shouldReturnApplications() throws Exception {
 
-        when(applicationService.getByStatus(ApplicationStatus.SUBMITTED))
+        ApplicationStatus status = ApplicationStatus.SUBMITTED;
+
+        application.setStatus(status);
+
+        when(applicationService.getByStatus(status))
                 .thenReturn(List.of(application));
 
         mockMvc.perform(
@@ -143,6 +151,6 @@ class LoanApplicationControllerTest {
         .andExpect(status().isOk());
 
         verify(applicationService)
-                .getByStatus(ApplicationStatus.SUBMITTED);
+                .getByStatus(status);
     }
 }

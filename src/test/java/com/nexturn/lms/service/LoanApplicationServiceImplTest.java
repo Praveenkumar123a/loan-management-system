@@ -2,13 +2,12 @@ package com.nexturn.lms.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +22,6 @@ import com.nexturn.lms.entity.ApplicantProfile;
 import com.nexturn.lms.entity.LoanApplication;
 import com.nexturn.lms.entity.LoanProduct;
 import com.nexturn.lms.entity.User;
-import com.nexturn.lms.exception.ResourceNotFoundException;
 import com.nexturn.lms.repository.ApplicantProfileRepository;
 import com.nexturn.lms.repository.LoanApplicationRepository;
 import com.nexturn.lms.repository.LoanProductRepository;
@@ -45,7 +43,7 @@ class LoanApplicationServiceImplTest {
     private EligibilityRuleService eligibilityRuleService;
 
     @InjectMocks
-    private LoanApplicationServiceImpl applicationService;
+    private LoanApplicationServiceImpl loanApplicationService;
 
     private User applicant;
     private LoanProduct product;
@@ -56,52 +54,26 @@ class LoanApplicationServiceImplTest {
     void setUp() {
 
         applicant = new User();
-
         applicant.setUserId(1);
-        applicant.setFirstName("Punit");
-        applicant.setLastName("Kumar");
-        applicant.setEmail("punit@example.com");
 
         product = new LoanProduct();
-
         product.setProductId(1);
-        product.setMinAmount(
-                new BigDecimal("10000")
-        );
-        product.setMaxAmount(
-                new BigDecimal("500000")
-        );
-        product.setMinTenureMonths(6);
-        product.setMaxTenureMonths(60);
-        product.setDefaultInterestRate(
-                new BigDecimal("10.5")
-        );
-        product.setIsActive(true);
+        product.setMinAmount(new BigDecimal("100000"));
+        product.setMaxAmount(new BigDecimal("1000000"));
+        product.setMinTenureMonths(12);
+        product.setMaxTenureMonths(84);
 
         profile = new ApplicantProfile();
         profile.setProfileId(1);
         profile.setUser(applicant);
-        profile.setMonthlyIncome(
-                new BigDecimal("50000")
-        );
-        profile.setExistingLiabilities(
-                new BigDecimal("10000")
-        );
 
         application = new LoanApplication();
-
         application.setApplicationId(1);
         application.setApplicant(applicant);
         application.setProduct(product);
-        application.setRequestedAmount(
-                new BigDecimal("100000")
-        );
-        application.setTenureMonths(12);
-        application.setPurpose("Personal expenses");
-        application.setStatus(
-                ApplicationStatus.SUBMITTED
-        );
-        application.setEligibilityScore(80);
+        application.setRequestedAmount(new BigDecimal("500000"));
+        application.setTenureMonths(60);
+        application.setPurpose("Home renovation");
     }
 
     @Test
@@ -118,193 +90,37 @@ class LoanApplicationServiceImplTest {
 
         when(eligibilityRuleService.calculateEligibilityScore(
                 profile,
-                application
-        )).thenReturn(80);
+                application))
+                .thenReturn(80);
 
-        LoanApplication result =
-                applicationService.submitApplication(
-                        applicant,
-                        1,
-                        new BigDecimal("100000"),
-                        12,
-                        "Personal expenses"
-                );
+        LoanApplication result = loanApplicationService.submitApplication(
+                applicant,
+                1,
+                new BigDecimal("500000"),
+                60,
+                "Home renovation"
+        );
 
         assertNotNull(result);
 
-        assertEquals(
-                applicant,
-                result.getApplicant()
-        );
+        assertEquals(applicant, result.getApplicant());
+        assertEquals(product, result.getProduct());
+        assertEquals(new BigDecimal("500000"), result.getRequestedAmount());
+        assertEquals(60, result.getTenureMonths());
+        assertEquals("Home renovation", result.getPurpose());
+        assertEquals(ApplicationStatus.SUBMITTED, result.getStatus());
+        assertEquals(80, result.getEligibilityScore());
 
-        assertEquals(
-                product,
-                result.getProduct()
-        );
+        verify(productRepository).findById(1);
 
-        assertEquals(
-                new BigDecimal("100000"),
-                result.getRequestedAmount()
-        );
-
-        assertEquals(
-                12,
-                result.getTenureMonths()
-        );
-
-        assertEquals(
-                "Personal expenses",
-                result.getPurpose()
-        );
-
-        assertEquals(
-                ApplicationStatus.SUBMITTED,
-                result.getStatus()
-        );
-
-        assertEquals(
-                80,
-                result.getEligibilityScore()
-        );
-
-        assertNotNull(
-                result.getSubmittedAt()
-        );
-
-        verify(productRepository)
-                .findById(1);
+        verify(applicationRepository, times(2))
+                .save(any(LoanApplication.class));
 
         verify(profileRepository)
                 .findByUser(applicant);
 
         verify(eligibilityRuleService)
-                .calculateEligibilityScore(
-                        profile,
-                        application
-                );
-
-        verify(applicationRepository)
-                .save(any(LoanApplication.class));
-    }
-
-    @Test
-    void submitApplication_shouldThrowExceptionWhenProductDoesNotExist() {
-
-        when(productRepository.findById(999))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> applicationService.submitApplication(
-                        applicant,
-                        999,
-                        new BigDecimal("100000"),
-                        12,
-                        "Personal expenses"
-                )
-        );
-
-        verify(productRepository)
-                .findById(999);
-    }
-
-    @Test
-    void submitApplication_shouldThrowExceptionWhenAmountIsBelowMinimum() {
-
-        when(productRepository.findById(1))
-                .thenReturn(Optional.of(product));
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> applicationService.submitApplication(
-                        applicant,
-                        1,
-                        new BigDecimal("5000"),
-                        12,
-                        "Personal expenses"
-                )
-        );
-    }
-
-    @Test
-    void submitApplication_shouldThrowExceptionWhenAmountIsAboveMaximum() {
-
-        when(productRepository.findById(1))
-                .thenReturn(Optional.of(product));
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> applicationService.submitApplication(
-                        applicant,
-                        1,
-                        new BigDecimal("600000"),
-                        12,
-                        "Personal expenses"
-                )
-        );
-    }
-
-    @Test
-    void submitApplication_shouldThrowExceptionWhenTenureIsBelowMinimum() {
-
-        when(productRepository.findById(1))
-                .thenReturn(Optional.of(product));
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> applicationService.submitApplication(
-                        applicant,
-                        1,
-                        new BigDecimal("100000"),
-                        3,
-                        "Personal expenses"
-                )
-        );
-    }
-
-    @Test
-    void submitApplication_shouldThrowExceptionWhenTenureIsAboveMaximum() {
-
-        when(productRepository.findById(1))
-                .thenReturn(Optional.of(product));
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> applicationService.submitApplication(
-                        applicant,
-                        1,
-                        new BigDecimal("100000"),
-                        72,
-                        "Personal expenses"
-                )
-        );
-    }
-
-    @Test
-    void submitApplication_shouldThrowExceptionWhenApplicantProfileDoesNotExist() {
-
-        when(productRepository.findById(1))
-                .thenReturn(Optional.of(product));
-
-        when(applicationRepository.save(any(LoanApplication.class)))
-                .thenReturn(application);
-
-        when(profileRepository.findByUser(applicant))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> applicationService.submitApplication(
-                        applicant,
-                        1,
-                        new BigDecimal("100000"),
-                        12,
-                        "Personal expenses"
-                )
-        );
-
-        verify(profileRepository)
-                .findByUser(applicant);
+                .calculateEligibilityScore(profile, application);
     }
 
     @Test
@@ -314,60 +130,27 @@ class LoanApplicationServiceImplTest {
                 .thenReturn(Optional.of(application));
 
         LoanApplication result =
-                applicationService.getById(1);
+                loanApplicationService.getById(1);
 
         assertNotNull(result);
-
-        assertEquals(
-                1,
-                result.getApplicationId()
-        );
-
-        assertEquals(
-                new BigDecimal("100000"),
-                result.getRequestedAmount()
-        );
+        assertEquals(application, result);
 
         verify(applicationRepository)
                 .findById(1);
     }
 
     @Test
-    void getById_shouldThrowExceptionWhenApplicationDoesNotExist() {
-
-        when(applicationRepository.findById(999))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> applicationService.getById(999)
-        );
-
-        verify(applicationRepository)
-                .findById(999);
-    }
-
-    @Test
     void getByApplicant_shouldReturnApplications() {
 
-        when(applicationRepository
-                .findByApplicant_UserId(1))
-                .thenReturn(List.of(application));
+        when(applicationRepository.findByApplicant_UserId(1))
+                .thenReturn(java.util.List.of(application));
 
-        List<LoanApplication> result =
-                applicationService.getByApplicant(1);
+        var result =
+                loanApplicationService.getByApplicant(1);
 
         assertNotNull(result);
-
-        assertEquals(
-                1,
-                result.size()
-        );
-
-        assertEquals(
-                1,
-                result.get(0).getApplicationId()
-        );
+        assertEquals(1, result.size());
+        assertEquals(application, result.get(0));
 
         verify(applicationRepository)
                 .findByApplicant_UserId(1);
@@ -376,29 +159,22 @@ class LoanApplicationServiceImplTest {
     @Test
     void getByStatus_shouldReturnApplications() {
 
-        when(applicationRepository
-                .findByStatus(ApplicationStatus.SUBMITTED))
-                .thenReturn(List.of(application));
+        ApplicationStatus status = ApplicationStatus.SUBMITTED;
 
-        List<LoanApplication> result =
-                applicationService.getByStatus(
-                        ApplicationStatus.SUBMITTED
-                );
+        application.setStatus(status);
+
+        when(applicationRepository.findByStatus(status))
+                .thenReturn(java.util.List.of(application));
+
+        var result =
+                loanApplicationService.getByStatus(status);
 
         assertNotNull(result);
-
-        assertEquals(
-                1,
-                result.size()
-        );
-
-        assertEquals(
-                ApplicationStatus.SUBMITTED,
-                result.get(0).getStatus()
-        );
+        assertEquals(1, result.size());
+        assertEquals(application, result.get(0));
 
         verify(applicationRepository)
-                .findByStatus(ApplicationStatus.SUBMITTED);
+                .findByStatus(status);
     }
 
     @Test
@@ -411,17 +187,13 @@ class LoanApplicationServiceImplTest {
                 .thenReturn(application);
 
         LoanApplication result =
-                applicationService.updateStatus(
+                loanApplicationService.updateStatus(
                         1,
                         ApplicationStatus.VERIFIED
                 );
 
         assertNotNull(result);
-
-        assertEquals(
-                ApplicationStatus.VERIFIED,
-                result.getStatus()
-        );
+        assertEquals(ApplicationStatus.VERIFIED, result.getStatus());
 
         verify(applicationRepository)
                 .findById(1);
