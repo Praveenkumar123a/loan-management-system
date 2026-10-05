@@ -1,6 +1,6 @@
 import { useEffect,useState } from 'react';
 import { useNavigate,useParams } from 'react-router-dom';
-import { CCard,CCardBody,CButton,CTable,CAlert,CForm,CFormInput } from '@coreui/react';
+import { CCard,CCardBody,CButton,CTable,CAlert,CForm,CFormInput,CFormSelect } from '@coreui/react';
 import api from '../../api/axiosConfig';
 
 function ApplicationDetail(){
@@ -8,7 +8,8 @@ function ApplicationDetail(){
  const navigate=useNavigate();
  const [application,setApplication]=useState(null);
  const [documents,setDocuments]=useState([]);
- const [form,setForm]=useState({documentType:'',fileName:'',filePath:''});
+ const [form,setForm]=useState({documentType:'',file:null});
+ const [fileInputKey,setFileInputKey]=useState(0);
  const [loading,setLoading]=useState(true);
  const [uploading,setUploading]=useState(false);
  const [error,setError]=useState('');
@@ -16,38 +17,57 @@ function ApplicationDetail(){
 
  const loadData=async()=>{
   try{
-   setLoading(true);setError('');
+   setLoading(true);
+   setError('');
    const app=await api.get(`/applications/${applicationId}`);
    setApplication(app.data);
    const docs=await api.get(`/documents/application/${applicationId}`);
    setDocuments(Array.isArray(docs.data)?docs.data:[]);
   }catch(e){
    setError(e.response?.data?.message||e.response?.data?.error||'Failed to load application.');
-  }finally{setLoading(false);}
+  }finally{
+   setLoading(false);
+  }
  };
 
  useEffect(()=>{loadData();},[applicationId]);
 
- const change=e=>setForm({...form,[e.target.name]:e.target.value});
-
  const uploadDocument=async e=>{
-  e.preventDefault();setError('');setMessage('');
-  if(!form.documentType||!form.fileName||!form.filePath){
-   setError('Please fill all document fields.');return;
+  e.preventDefault();
+  setError('');
+  setMessage('');
+
+  if(!form.documentType||!form.file){
+   setError('Please select document type and file.');
+   return;
   }
+
   try{
    setUploading(true);
-   await api.post(`/documents/application/${applicationId}`,form);
+
+   const data=new FormData();
+   data.append('documentType',form.documentType);
+   data.append('file',form.file);
+
+   await api.post(`/documents/application/${applicationId}`,data);
+
    setMessage('Document uploaded successfully.');
-   setForm({documentType:'',fileName:'',filePath:''});
+   setForm({documentType:'',file:null});
+   setFileInputKey(prev=>prev+1);
+
    await loadData();
   }catch(e){
    setError(e.response?.data?.message||e.response?.data?.error||'Document upload failed.');
-  }finally{setUploading(false);}
+  }finally{
+   setUploading(false);
+  }
  };
 
  if(loading)return <p>Loading application...</p>;
- if(!application)return <CAlert color="danger">{error||'Application not found.'}</CAlert>;
+
+ if(!application){
+  return <CAlert color="danger">{error||'Application not found.'}</CAlert>;
+ }
 
  return <>
   <div className="mb-4">
@@ -71,8 +91,11 @@ function ApplicationDetail(){
     </CTable>
 
     {application.status==='DISBURSED'&&
-     <CButton color="success" className="mt-3"
-      onClick={()=>navigate(`/applicant/application/${applicationId}/emi`)}>
+     <CButton
+      color="success"
+      className="mt-3"
+      onClick={()=>navigate(`/applicant/application/${applicationId}/emi`)}
+     >
       View EMI Schedule
      </CButton>
     }
@@ -83,18 +106,41 @@ function ApplicationDetail(){
    <CCardBody>
     <h5 className="fw-semibold mb-3">Documents</h5>
 
-    {documents.length===0?<p className="text-body-secondary">No documents uploaded yet.</p>:
+    {documents.length===0?
+     <p className="text-body-secondary">No documents uploaded yet.</p>:
      <CTable striped hover responsive>
-      <thead><tr><th>ID</th><th>Type</th><th>File Name</th><th>Status</th><th>Remarks</th></tr></thead>
-      <tbody>{documents.map(d=>
-       <tr key={d.documentId}>
-        <td>{d.documentId}</td>
-        <td>{d.documentType}</td>
-        <td>{d.fileName}</td>
-        <td>{d.verificationStatus}</td>
-        <td>{d.remarks||'-'}</td>
+      <thead>
+       <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>File Name</th>
+        <th>Status</th>
+        <th>Remarks</th>
+        <th>Action</th>
        </tr>
-      )}</tbody>
+      </thead>
+
+      <tbody>
+       {documents.map(d=>
+        <tr key={d.documentId}>
+         <td>{d.documentId}</td>
+         <td>{d.documentType}</td>
+         <td>{d.fileName}</td>
+         <td>{d.verificationStatus}</td>
+         <td>{d.remarks||'-'}</td>
+         <td>
+          <CButton
+           size="sm"
+           color="primary"
+           variant="outline"
+           onClick={()=>window.open(`${api.defaults.baseURL}/documents/${d.documentId}/file`,'_blank')}
+          >
+           View
+          </CButton>
+         </td>
+        </tr>
+       )}
+      </tbody>
      </CTable>
     }
    </CCardBody>
@@ -104,11 +150,42 @@ function ApplicationDetail(){
    <CCard>
     <CCardBody>
      <h5 className="fw-semibold mb-3">Upload Document</h5>
+
      <CForm onSubmit={uploadDocument}>
-      <CFormInput name="documentType" placeholder="Document type" value={form.documentType} onChange={change} className="mb-2"/>
-      <CFormInput name="fileName" placeholder="File name" value={form.fileName} onChange={change} className="mb-2"/>
-      <CFormInput name="filePath" placeholder="File path" value={form.filePath} onChange={change} className="mb-3"/>
-      <CButton type="submit" disabled={uploading}>{uploading?'Uploading...':'Upload Document'}</CButton>
+      <CFormSelect
+       label="Document Type"
+       name="documentType"
+       value={form.documentType}
+       onChange={e=>setForm({...form,documentType:e.target.value})}
+       className="mb-3"
+       options={[
+        {label:'Select document type',value:''},
+        {label:'Aadhaar',value:'AADHAAR'},
+        {label:'PAN',value:'PAN'},
+        {label:'Income Proof',value:'INCOME_PROOF'},
+        {label:'Bank Statement',value:'BANK_STATEMENT'},
+        {label:'Other',value:'OTHER'}
+       ]}
+      />
+
+      <CFormInput
+       key={fileInputKey}
+       type="file"
+       label="Choose File"
+       accept=".pdf,.jpg,.jpeg,.png"
+       onChange={e=>setForm({...form,file:e.target.files?.[0]||null})}
+       className="mb-3"
+      />
+
+      {form.file&&
+       <div className="text-body-secondary small mb-3">
+        Selected: {form.file.name}
+       </div>
+      }
+
+      <CButton type="submit" disabled={uploading}>
+       {uploading?'Uploading...':'Upload Document'}
+      </CButton>
      </CForm>
     </CCardBody>
    </CCard>
