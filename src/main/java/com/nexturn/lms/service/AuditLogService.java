@@ -1,18 +1,8 @@
 package com.nexturn.lms.service;
 
-import java.util.List;
-
-import com.nexturn.lms.entity.AuditLog;
+import com.nexturn.lms.entity.LoanApplication;
+import com.nexturn.lms.entity.User;
 
 public interface AuditLogService {
-
-    AuditLog createAuditLog(AuditLog auditLog);
-
-    AuditLog getAuditLogById(Integer logId);
-
-    List<AuditLog> getAuditLogsByUser(Integer userId);
-
-    List<AuditLog> getAuditLogsByApplication(Integer applicationId);
-
-    List<AuditLog> getAllAuditLogs();
+    void log(User user, LoanApplication application, String action, String details);
 }

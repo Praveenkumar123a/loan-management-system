@@ -1,5 +1,8 @@
 package com.nexturn.lms.service;
 
-public interface EligibilityRuleService {
+import com.nexturn.lms.entity.ApplicantProfile;
+import com.nexturn.lms.entity.LoanApplication;
 
+public interface EligibilityRuleService {
+    int calculateEligibilityScore(ApplicantProfile profile, LoanApplication application);
 }

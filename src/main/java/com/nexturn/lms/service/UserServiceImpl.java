@@ -1,63 +1,51 @@
 package com.nexturn.lms.service;
 
-import java.util.List;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nexturn.lms.entity.User;
-import com.nexturn.lms.exception.UserNotFoundException;
+import com.nexturn.lms.exception.InvalidCredentialsException;
+import com.nexturn.lms.exception.InvalidRequestException;
+import com.nexturn.lms.exception.ResourceNotFoundException;
 import com.nexturn.lms.repository.UserRepository;
+import com.nexturn.lms.utils.Role;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     @Autowired
-    UserRepository repo;
+    private UserRepository userRepository;
 
     @Override
-    public String addUser(User user) {
-        User u = repo.save(user);
-        String str = "User inserted " + u.getUserId();
-        return str;
+    public User register(String firstName, String lastName, String email, String rawPassword, Role role) {
+        userRepository.findByEmail(email).ifPresent(u -> {
+            throw new InvalidRequestException("Email already registered: " + email);
+        });
+
+        User user = new User();
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEmail(email);
+        user.setPassword(rawPassword); // TODO: replace with passwordEncoder.encode(rawPassword) once Security is added
+        user.setRole(role);
+
+        return userRepository.save(user);
     }
 
     @Override
-    public String updateUser(User user) {
-        repo.save(user);
-        String str = "User updated";
-        return str;
+    public User login(String email, String rawPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+        if (!user.getPassword().equals(rawPassword)) { 
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+        return user;
     }
 
     @Override
-    public String removeUser(Long userId) {
-        repo.deleteById(userId);
-        return "User deleted";
-    }
-
-    @Override
-    public List<User> findAllUsers() {
-        return repo.findAll();
-    }
-
-    @Override
-    public User findUserById(Long userId) {
-        Optional<User> user = repo.findById(userId);
-
-        if (user.isEmpty())
-            throw new UserNotFoundException();
-
-        return user.get();
-    }
-
-    @Override
-    public User findUserByEmail(String email) {
-        Optional<User> user = repo.findByEmail(email);
-
-        if (user.isEmpty())
-            throw new UserNotFoundException();
-
-        return user.get();
+    public User getById(Integer userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
     }
 }

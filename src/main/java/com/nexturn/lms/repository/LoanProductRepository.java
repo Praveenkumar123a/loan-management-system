@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.nexturn.lms.entity.LoanProduct;
 
-@Repository 
-public interface LoanProductRepository extends JpaRepository<LoanProduct,Integer> {
+@Repository
+public interface LoanProductRepository extends JpaRepository<LoanProduct, Integer> {
 
 }

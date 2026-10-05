@@ -1,16 +1,10 @@
 package com.nexturn.lms.service;
 
-import java.util.List;
-import java.util.Optional;
-
 import com.nexturn.lms.entity.User;
+import com.nexturn.lms.utils.Role;
 
 public interface UserService {
-
-    User createUser(User user);
-    List<User> getAllUsers();
-    Optional<User> getUserById(Long userId);
-    Optional<User> getUserByEmail(String email);
-    User updateUser(Long userId, User user);
-    void deleteUser(Long userId);
+    User register(String firstName, String lastName, String email, String rawPassword, Role role);
+    User login(String email, String rawPassword);
+    User getById(Integer userId);
 }

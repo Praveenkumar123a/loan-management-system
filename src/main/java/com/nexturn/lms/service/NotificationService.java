@@ -3,18 +3,10 @@ package com.nexturn.lms.service;
 import java.util.List;
 
 import com.nexturn.lms.entity.Notification;
+import com.nexturn.lms.entity.User;
 
 public interface NotificationService {
-
-    Notification createNotification(Notification notification);
-
-    Notification getNotificationById(Integer notificationId);
-
-    List<Notification> getNotificationsByUser(Integer userId);
-
+    Notification notify(User user, String message, String type);
+    List<Notification> getByUser(User user);
     Notification markAsRead(Integer notificationId);
-
-    void sendUpcomingEmiNotifications();
-
-    void sendOverdueEmiNotifications();
 }

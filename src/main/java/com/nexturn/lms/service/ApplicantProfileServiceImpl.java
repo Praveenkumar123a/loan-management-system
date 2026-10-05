@@ -1,53 +1,43 @@
 package com.nexturn.lms.service;
 
-import java.util.List;
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nexturn.lms.entity.ApplicantProfile;
-import com.nexturn.lms.exception.ApplicantProfileNotFoundException;
+import com.nexturn.lms.entity.User;
+import com.nexturn.lms.exception.ResourceNotFoundException;
 import com.nexturn.lms.repository.ApplicantProfileRepository;
 
 @Service
 public class ApplicantProfileServiceImpl implements ApplicantProfileService {
 
     @Autowired
-    ApplicantProfileRepository repo;
+    private ApplicantProfileRepository profileRepository;
 
     @Override
-    public String addApplicantProfile(ApplicantProfile profile) {
-        ApplicantProfile ap = repo.save(profile);
-        String str = "Applicant profile inserted " + ap.getProfileId();
-        return str;
+    public ApplicantProfile createOrUpdateProfile(User user, LocalDate dob, String address, String pan,
+                                                   String aadhaar, String employmentType,
+                                                   BigDecimal monthlyIncome, BigDecimal existingLiabilities) {
+
+        ApplicantProfile profile = profileRepository.findByUser(user).orElse(new ApplicantProfile());
+        profile.setUser(user);
+        profile.setDateOfBirth(dob);
+        profile.setAddress(address);
+        profile.setPanNumber(pan);
+        profile.setAadhaarNumber(aadhaar);
+        profile.setEmploymentType(employmentType);
+        profile.setMonthlyIncome(monthlyIncome);
+        profile.setExistingLiabilities(existingLiabilities == null ? BigDecimal.ZERO : existingLiabilities);
+
+        return profileRepository.save(profile);
     }
 
     @Override
-    public String updateApplicantProfile(ApplicantProfile profile) {
-        repo.save(profile);
-        String str = "Applicant profile updated";
-        return str;
-    }
-
-    @Override
-    public String removeApplicantProfile(Long profileId) {
-        repo.deleteById(profileId);
-        return "Applicant profile deleted";
-    }
-
-    @Override
-    public List<ApplicantProfile> findAllApplicantProfiles() {
-        return repo.findAll();
-    }
-
-    @Override
-    public ApplicantProfile findApplicantProfileById(Long profileId) {
-        Optional<ApplicantProfile> profile = repo.findById(profileId);
-
-        if (profile.isEmpty())
-            throw new ApplicantProfileNotFoundException();
-
-        return profile.get();
+    public ApplicantProfile getByUser(User user) {
+        return profileRepository.findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user: " + user.getUserId()));
     }
 }

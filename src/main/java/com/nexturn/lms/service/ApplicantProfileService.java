@@ -1,14 +1,14 @@
 package com.nexturn.lms.service;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import com.nexturn.lms.entity.ApplicantProfile;
+import com.nexturn.lms.entity.User;
 
 public interface ApplicantProfileService {
-
-    String addApplicantProfile(ApplicantProfile profile);
-    String updateApplicantProfile(ApplicantProfile profile);
-    String removeApplicantProfile(Long profileId);
-    List<ApplicantProfile> findAllApplicantProfiles();
-    ApplicantProfile findApplicantProfileById(Long profileId);
+    ApplicantProfile createOrUpdateProfile(User user, LocalDate dob, String address, String pan,
+                                            String aadhaar, String employmentType,
+                                            BigDecimal monthlyIncome, BigDecimal existingLiabilities);
+    ApplicantProfile getByUser(User user);
 }
