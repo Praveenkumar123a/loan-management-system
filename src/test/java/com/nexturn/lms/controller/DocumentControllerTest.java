@@ -46,19 +46,14 @@ class DocumentControllerTest {
 
     @InjectMocks
     private DocumentController documentController;
-
     private MockMvc mockMvc;
-
     private LoanApplication application;
     private User officer;
     private Document document;
 
     @BeforeEach
     void setUp() {
-
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(documentController)
-                .build();
+        mockMvc = MockMvcBuilders.standaloneSetup(documentController).build();
 
         application = new LoanApplication();
         application.setApplicationId(1);
@@ -70,17 +65,13 @@ class DocumentControllerTest {
         document.setDocumentId(1);
         document.setFileName("pan.pdf");
 
-        // Required by DocumentResponse
         document.setApplication(application);
     }
 
     @Test
     void upload_shouldReturnDocument() throws Exception {
-
         when(applicationService.getById(1)).thenReturn(application);
-
-        when(documentService.upload(eq(application), eq("PAN"), any(MultipartFile.class)))
-                .thenReturn(document);
+        when(documentService.upload(eq(application), eq("PAN"), any(MultipartFile.class))).thenReturn(document);
 
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -88,26 +79,18 @@ class DocumentControllerTest {
                 "application/pdf",
                 "test pdf content".getBytes()
         );
-
         mockMvc.perform(
-                multipart("/api/documents/application/1")
-                        .file(file)
-                        .param("documentType", "PAN")
-        )
-        .andExpect(status().isOk());
-
+                multipart("/api/documents/application/1").file(file).param("documentType", "PAN")).andExpect(status().isOk());
         verify(applicationService).getById(1);
         verify(documentService).upload(eq(application), eq("PAN"), any(MultipartFile.class));
     }
 
     @Test
     void getByApplication_shouldReturnDocuments() throws Exception {
-
         when(applicationService.getById(1)).thenReturn(application);
         when(documentService.getByApplication(application)).thenReturn(List.of(document));
 
-        mockMvc.perform(get("/api/documents/application/1"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/documents/application/1")).andExpect(status().isOk());
 
         verify(applicationService).getById(1);
         verify(documentService).getByApplication(application);
@@ -115,9 +98,7 @@ class DocumentControllerTest {
 
     @Test
     void viewDocument_shouldReturnFile() throws Exception {
-
         Resource resource = new ByteArrayResource("test pdf content".getBytes());
-
         when(documentService.getById(1)).thenReturn(document);
         when(documentService.loadFile(document)).thenReturn(resource);
         when(documentService.getContentType(document)).thenReturn("application/pdf");
@@ -134,12 +115,8 @@ class DocumentControllerTest {
 
     @Test
     void verify_shouldVerifyDocument() throws Exception {
-
         when(userService.getById(2)).thenReturn(officer);
-
-        when(documentService.verify(1, officer, true, "Document verified"))
-                .thenReturn(document);
-
+        when(documentService.verify(1, officer, true, "Document verified")).thenReturn(document);
         String requestBody = """
                 {
                     "officerId": 2,
@@ -161,10 +138,8 @@ class DocumentControllerTest {
 
     @Test
     void verify_withoutOfficer_shouldAllowNullOfficer() throws Exception {
-
         when(documentService.verify(1, null, false, "Please resubmit document"))
                 .thenReturn(document);
-
         String requestBody = """
                 {
                     "officerId": null,
@@ -172,14 +147,12 @@ class DocumentControllerTest {
                     "remarks": "Please resubmit document"
                 }
                 """;
-
         mockMvc.perform(
                 put("/api/documents/1/verify")
                         .contentType("application/json")
                         .content(requestBody)
         )
         .andExpect(status().isOk());
-
         verify(documentService).verify(1, null, false, "Please resubmit document");
     }
 }

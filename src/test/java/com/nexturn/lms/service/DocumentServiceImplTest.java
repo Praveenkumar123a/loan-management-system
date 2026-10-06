@@ -64,19 +64,11 @@ class DocumentServiceImplTest {
         document.setVerificationStatus("PENDING");
     }
 
-    // ---------- upload ----------
-
     @Test
     void upload_shouldStoreFileAndSaveDocument() throws Exception {
-
-        when(documentRepository.save(any(Document.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "aadhaar.pdf", "application/pdf", "pdf content".getBytes());
-
+        when(documentRepository.save(any(Document.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        MockMultipartFile file = new MockMultipartFile("file", "aadhaar.pdf", "application/pdf", "pdf content".getBytes());
         Document result = documentService.upload(application, "AADHAAR", file);
-
         Path storedFile = Path.of(result.getFilePath());
 
         try {
@@ -90,32 +82,23 @@ class DocumentServiceImplTest {
 
             verify(documentRepository).save(any(Document.class));
         } finally {
-            Files.deleteIfExists(storedFile);   // clean up the file the test created
+            Files.deleteIfExists(storedFile); 
         }
     }
 
     @Test
     void upload_shouldThrowWhenFileIsEmpty() {
-
-        MockMultipartFile emptyFile = new MockMultipartFile(
-                "file", "empty.pdf", "application/pdf", new byte[0]);
-
+        MockMultipartFile emptyFile = new MockMultipartFile("file", "empty.pdf", "application/pdf", new byte[0]);
         assertThrows(InvalidRequestException.class,
                 () -> documentService.upload(application, "AADHAAR", emptyFile));
-
         verify(documentRepository, never()).save(any(Document.class));
     }
 
-    // ---------- read ----------
 
     @Test
     void getByApplication_shouldReturnDocuments() {
-
-        when(documentRepository.findByApplication(application))
-                .thenReturn(List.of(document));
-
+        when(documentRepository.findByApplication(application)).thenReturn(List.of(document));
         List<Document> result = documentService.getByApplication(application);
-
         assertEquals(1, result.size());
         assertEquals(1, result.get(0).getDocumentId());
         assertEquals("AADHAAR", result.get(0).getDocumentType());
@@ -125,35 +108,26 @@ class DocumentServiceImplTest {
 
     @Test
     void getById_shouldReturnDocument() {
-
         when(documentRepository.findById(1)).thenReturn(Optional.of(document));
-
         Document result = documentService.getById(1);
-
         assertEquals(document, result);
     }
 
     @Test
     void getById_shouldThrowWhenNotFound() {
-
         when(documentRepository.findById(999)).thenReturn(Optional.empty());
-
         assertThrows(ResourceNotFoundException.class,
                 () -> documentService.getById(999));
     }
 
-    // ---------- file loading ----------
 
     @Test
     void loadFile_shouldReturnResourceWhenFileExists() throws Exception {
-
         Path tempFile = Files.createTempFile("aadhaar-test-", ".pdf");
 
         try {
             document.setFilePath(tempFile.toString());
-
             Resource resource = documentService.loadFile(document);
-
             assertTrue(resource.exists());
         } finally {
             Files.deleteIfExists(tempFile);
@@ -162,32 +136,24 @@ class DocumentServiceImplTest {
 
     @Test
     void loadFile_shouldThrowWhenFileMissing() {
-
         document.setFilePath("/definitely/not/here/missing.pdf");
-
         assertThrows(ResourceNotFoundException.class,
                 () -> documentService.loadFile(document));
     }
 
     @Test
     void getContentType_shouldFallBackToOctetStream() throws Exception {
-
         Path tempFile = Files.createTempFile("aadhaar-test-", ".unknownext");
-
         try {
             document.setFilePath(tempFile.toString());
-
             assertEquals("application/octet-stream", documentService.getContentType(document));
         } finally {
             Files.deleteIfExists(tempFile);
         }
     }
 
-    // ---------- verify ----------
-
     @Test
     void verify_shouldMarkDocumentAsVerified() {
-
         when(documentRepository.findById(1)).thenReturn(Optional.of(document));
         when(documentRepository.save(document)).thenReturn(document);
 
@@ -204,12 +170,9 @@ class DocumentServiceImplTest {
 
     @Test
     void verify_shouldRequestResubmissionWhenRejected() {
-
         when(documentRepository.findById(1)).thenReturn(Optional.of(document));
         when(documentRepository.save(document)).thenReturn(document);
-
         Document result = documentService.verify(1, officer, false, "Image is not clear");
-
         assertEquals("RESUBMISSION_REQUIRED", result.getVerificationStatus());
         assertEquals("Image is not clear", result.getRemarks());
         assertEquals(officer, result.getVerifiedBy());
@@ -221,9 +184,7 @@ class DocumentServiceImplTest {
 
         when(documentRepository.findById(1)).thenReturn(Optional.of(document));
         when(documentRepository.save(document)).thenReturn(document);
-
         Document result = documentService.verify(1, null, true, "Automatically verified");
-
         assertEquals("VERIFIED", result.getVerificationStatus());
         assertEquals("Automatically verified", result.getRemarks());
         assertNotNull(result.getVerifiedAt());
@@ -231,9 +192,7 @@ class DocumentServiceImplTest {
 
     @Test
     void verify_shouldThrowExceptionWhenDocumentDoesNotExist() {
-
         when(documentRepository.findById(999)).thenReturn(Optional.empty());
-
         assertThrows(ResourceNotFoundException.class,
                 () -> documentService.verify(999, officer, true, "Verified"));
 
