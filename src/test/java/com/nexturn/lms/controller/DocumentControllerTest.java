@@ -1,33 +1,33 @@
 package com.nexturn.lms.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.nexturn.lms.entity.Document;
 import com.nexturn.lms.entity.LoanApplication;
 import com.nexturn.lms.entity.User;
-import com.nexturn.lms.repository.DocumentRepository;
 import com.nexturn.lms.service.DocumentService;
 import com.nexturn.lms.service.LoanApplicationService;
 import com.nexturn.lms.service.UserService;
@@ -43,9 +43,6 @@ class DocumentControllerTest {
 
     @Mock
     private UserService userService;
-
-    @Mock
-    private DocumentRepository documentRepository;
 
     @InjectMocks
     private DocumentController documentController;
@@ -80,15 +77,10 @@ class DocumentControllerTest {
     @Test
     void upload_shouldReturnDocument() throws Exception {
 
-        when(applicationService.getById(1))
-                .thenReturn(application);
+        when(applicationService.getById(1)).thenReturn(application);
 
-        when(documentService.upload(
-                org.mockito.ArgumentMatchers.eq(application),
-                org.mockito.ArgumentMatchers.eq("PAN"),
-                org.mockito.ArgumentMatchers.eq("pan.pdf"),
-                org.mockito.ArgumentMatchers.any(String.class)
-        )).thenReturn(document);
+        when(documentService.upload(eq(application), eq("PAN"), any(MultipartFile.class)))
+                .thenReturn(document);
 
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -104,85 +96,49 @@ class DocumentControllerTest {
         )
         .andExpect(status().isOk());
 
-        verify(applicationService)
-                .getById(1);
-
-        verify(documentService)
-                .upload(
-                        org.mockito.ArgumentMatchers.eq(application),
-                        org.mockito.ArgumentMatchers.eq("PAN"),
-                        org.mockito.ArgumentMatchers.eq("pan.pdf"),
-                        org.mockito.ArgumentMatchers.any(String.class)
-                );
+        verify(applicationService).getById(1);
+        verify(documentService).upload(eq(application), eq("PAN"), any(MultipartFile.class));
     }
 
     @Test
     void getByApplication_shouldReturnDocuments() throws Exception {
 
-        when(applicationService.getById(1))
-                .thenReturn(application);
+        when(applicationService.getById(1)).thenReturn(application);
+        when(documentService.getByApplication(application)).thenReturn(List.of(document));
 
-        when(documentService.getByApplication(application))
-                .thenReturn(List.of(document));
+        mockMvc.perform(get("/api/documents/application/1"))
+                .andExpect(status().isOk());
 
-        mockMvc.perform(
-                get("/api/documents/application/1")
-        )
-        .andExpect(status().isOk());
-
-        verify(applicationService)
-                .getById(1);
-
-        verify(documentService)
-                .getByApplication(application);
+        verify(applicationService).getById(1);
+        verify(documentService).getByApplication(application);
     }
 
     @Test
     void viewDocument_shouldReturnFile() throws Exception {
 
-        Path tempFile = Files.createTempFile(
-                "pan-test-",
-                ".pdf"
-        );
+        Resource resource = new ByteArrayResource("test pdf content".getBytes());
 
-        try {
+        when(documentService.getById(1)).thenReturn(document);
+        when(documentService.loadFile(document)).thenReturn(resource);
+        when(documentService.getContentType(document)).thenReturn("application/pdf");
 
-            Files.write(
-                    tempFile,
-                    "test pdf content".getBytes()
-            );
+        mockMvc.perform(get("/api/documents/1/file"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/pdf"))
+                .andExpect(content().string("test pdf content"));
 
-            document.setFilePath(tempFile.toString());
-
-            when(documentRepository.findById(1))
-                    .thenReturn(Optional.of(document));
-
-            mockMvc.perform(
-                    get("/api/documents/1/file")
-            )
-            .andExpect(status().isOk());
-
-            verify(documentRepository)
-                    .findById(1);
-
-        } finally {
-
-            Files.deleteIfExists(tempFile);
-        }
+        verify(documentService).getById(1);
+        verify(documentService).loadFile(document);
+        verify(documentService).getContentType(document);
     }
 
     @Test
     void verify_shouldVerifyDocument() throws Exception {
 
-        when(userService.getById(2))
-                .thenReturn(officer);
+        when(userService.getById(2)).thenReturn(officer);
 
-        when(documentService.verify(
-                1,
-                officer,
-                true,
-                "Document verified"
-        )).thenReturn(document);
+        when(documentService.verify(1, officer, true, "Document verified"))
+                .thenReturn(document);
 
         String requestBody = """
                 {
@@ -199,27 +155,15 @@ class DocumentControllerTest {
         )
         .andExpect(status().isOk());
 
-        verify(userService)
-                .getById(2);
-
-        verify(documentService)
-                .verify(
-                        1,
-                        officer,
-                        true,
-                        "Document verified"
-                );
+        verify(userService).getById(2);
+        verify(documentService).verify(1, officer, true, "Document verified");
     }
 
     @Test
     void verify_withoutOfficer_shouldAllowNullOfficer() throws Exception {
 
-        when(documentService.verify(
-                1,
-                null,
-                false,
-                "Please resubmit document"
-        )).thenReturn(document);
+        when(documentService.verify(1, null, false, "Please resubmit document"))
+                .thenReturn(document);
 
         String requestBody = """
                 {
@@ -236,12 +180,6 @@ class DocumentControllerTest {
         )
         .andExpect(status().isOk());
 
-        verify(documentService)
-                .verify(
-                        1,
-                        null,
-                        false,
-                        "Please resubmit document"
-                );
+        verify(documentService).verify(1, null, false, "Please resubmit document");
     }
 }
