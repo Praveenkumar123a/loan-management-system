@@ -13,8 +13,13 @@ import EmiSchedule from './pages/applicant/EmiSchedule';
 import PayEmi from './pages/applicant/PayEmi';
 
 import OfficerDashboard from './pages/officer/Dashboard';
+import OfficerApplications from './pages/officer/Applications';
+
 import ManagerDashboard from './pages/manager/Dashboard';
+import ManagerApprovals from './pages/manager/Approvals';
+
 import AdminDashboard from './pages/admin/Dashboard';
+import Administration from './pages/admin/Administration';
 
 function App(){
   return (
@@ -72,15 +77,33 @@ function App(){
           </PrivateRoute>
         }/>
 
+        <Route path="/officer/applications" element={
+          <PrivateRoute allowedRole="LOAN_OFFICER">
+            <AppLayout><OfficerApplications/></AppLayout>
+          </PrivateRoute>
+        }/>
+
         <Route path="/manager/dashboard" element={
           <PrivateRoute allowedRole="MANAGER">
             <AppLayout><ManagerDashboard/></AppLayout>
           </PrivateRoute>
         }/>
 
+        <Route path="/manager/approvals" element={
+          <PrivateRoute allowedRole="MANAGER">
+            <AppLayout><ManagerApprovals/></AppLayout>
+          </PrivateRoute>
+        }/>
+
         <Route path="/admin/dashboard" element={
           <PrivateRoute allowedRole="ADMIN">
             <AppLayout><AdminDashboard/></AppLayout>
+          </PrivateRoute>
+        }/>
+
+        <Route path="/admin/administration" element={
+          <PrivateRoute allowedRole="ADMIN">
+            <AppLayout><Administration/></AppLayout>
           </PrivateRoute>
         }/>
 

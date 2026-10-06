@@ -10,4 +10,5 @@ import com.nexturn.lms.utils.ApplicationStatus;
 public interface LoanApplicationRepository extends JpaRepository<LoanApplication,Integer> {
     List<LoanApplication> findByApplicant_UserId(Integer userId);
     List<LoanApplication> findByStatus(ApplicationStatus status);
+    boolean existsByApplicant_UserIdAndStatusIn(Integer userId,List<ApplicationStatus> statuses);
 }

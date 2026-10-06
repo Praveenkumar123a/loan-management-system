@@ -3,8 +3,10 @@ package com.nexturn.lms.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import com.nexturn.lms.entity.ApplicantProfile;
 import com.nexturn.lms.entity.LoanApplication;
 import com.nexturn.lms.entity.LoanProduct;
@@ -32,7 +34,18 @@ public class LoanApplicationServiceImpl implements LoanApplicationService {
 
     @Override
     public LoanApplication submitApplication(User applicant,Integer productId,BigDecimal requestedAmount,int tenureMonths,String purpose) {
-        LoanProduct product=productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Loan product not found: "+productId));
+
+        List<ApplicationStatus> activeStatuses=List.of(
+            ApplicationStatus.SUBMITTED,
+            ApplicationStatus.RECOMMENDED,
+            ApplicationStatus.APPROVED
+        );
+
+        if(applicationRepository.existsByApplicant_UserIdAndStatusIn(applicant.getUserId(),activeStatuses))
+            throw new IllegalStateException("You already have an active loan application. Please wait until it is completed before applying again.");
+
+        LoanProduct product=productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Loan product not found: "+productId));
 
         if(requestedAmount.compareTo(product.getMinAmount())<0 || requestedAmount.compareTo(product.getMaxAmount())>0)
             throw new IllegalArgumentException("Requested amount outside product's allowed range");

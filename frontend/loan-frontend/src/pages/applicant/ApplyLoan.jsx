@@ -7,15 +7,36 @@ function ApplyLoan(){
  const [products,setProducts]=useState([]);
  const [formData,setFormData]=useState({productId:'',requestedAmount:'',tenureMonths:'',purpose:''});
  const [error,setError]=useState('');
+ const [activeApplication,setActiveApplication]=useState(null);
  const [loading,setLoading]=useState(false);
+ const [checking,setChecking]=useState(true);
  const navigate=useNavigate();
  const user=JSON.parse(localStorage.getItem('user'));
 
  useEffect(()=>{
+  const checkApplication=async()=>{
+   try{
+    const r=await api.get(`/applications/applicant/${user.userId}`);
+    const applications=Array.isArray(r.data)?r.data:[];
+
+    const active=applications.find(a=>
+     ['SUBMITTED','VERIFIED','RESUBMISSION_REQUIRED','RECOMMENDED','APPROVED'].includes(a.status)
+    );
+
+    if(active)setActiveApplication(active);
+   }catch{
+    setError('Could not check your existing applications.');
+   }finally{
+    setChecking(false);
+   }
+  };
+
+  checkApplication();
+
   api.get('/products')
    .then(res=>setProducts(res.data))
    .catch(()=>setError('Could not load loan products.'));
- },[]);
+ },[user.userId]);
 
  const handleChange=e=>setFormData({...formData,[e.target.name]:e.target.value});
 
@@ -23,6 +44,7 @@ function ApplyLoan(){
   e.preventDefault();
   setError('');
   setLoading(true);
+
   try{
    await api.post(`/applications/${user.userId}`,formData);
    navigate('/applicant/my-applications');
@@ -32,6 +54,60 @@ function ApplyLoan(){
    setLoading(false);
   }
  };
+
+ if(checking){
+  return (
+   <>
+    <div className="mb-4">
+     <h2 className="fw-bold">Apply for a Loan</h2>
+     <p className="text-body-secondary">Checking your existing applications...</p>
+    </div>
+
+    <CCard>
+     <CCardBody className="text-center py-5">
+      <CSpinner/>
+      <div className="mt-3 text-body-secondary">Please wait...</div>
+     </CCardBody>
+    </CCard>
+   </>
+  );
+ }
+
+ if(activeApplication){
+  return (
+   <>
+    <div className="mb-4">
+     <h2 className="fw-bold">Apply for a Loan</h2>
+     <p className="text-body-secondary">Submit a new loan application.</p>
+    </div>
+
+    <CCard>
+     <CCardHeader className="fw-semibold">Loan Application</CCardHeader>
+     <CCardBody>
+      <CAlert color="warning">
+       <h5 className="fw-bold">Active Loan Application Found</h5>
+       <p className="mb-2">
+        You already have an active loan application.
+       </p>
+       <p className="mb-3">
+        Application <b>#{activeApplication.applicationId}</b> is currently in
+        <b> {activeApplication.status}</b> status.
+       </p>
+       <p className="mb-3">
+        Please wait until your current application is completed before applying for another loan.
+       </p>
+       <CButton
+        color="primary"
+        onClick={()=>navigate('/applicant/my-applications')}
+       >
+        View My Applications
+       </CButton>
+      </CAlert>
+     </CCardBody>
+    </CCard>
+   </>
+  );
+ }
 
  return (
   <>
