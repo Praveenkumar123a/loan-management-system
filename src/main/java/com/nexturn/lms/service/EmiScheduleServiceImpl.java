@@ -1,5 +1,7 @@
 package com.nexturn.lms.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -35,4 +37,50 @@ public class EmiScheduleServiceImpl implements EmiScheduleService {
         return emiScheduleRepository.findById(emiId)
                 .orElseThrow(() -> new ResourceNotFoundException("EMI not found: " + emiId));
     }
+
+	@Override
+	public void generateEmiSchedule(Disbursement disbursement, BigDecimal principal,  BigDecimal annualRate, int tenureMonths, LocalDate startDate) {
+
+        BigDecimal monthlyRate = annualRate
+                .divide(BigDecimal.valueOf(1200), 10, RoundingMode.HALF_UP); 
+
+        BigDecimal onePlusR = BigDecimal.ONE.add(monthlyRate);
+        BigDecimal onePlusRPowN = onePlusR.pow(tenureMonths);
+
+        BigDecimal numerator = principal.multiply(monthlyRate).multiply(onePlusRPowN);
+        BigDecimal denominator = onePlusRPowN.subtract(BigDecimal.ONE);
+
+        BigDecimal emiAmount = monthlyRate.compareTo(BigDecimal.ZERO) == 0
+                ? principal.divide(BigDecimal.valueOf(tenureMonths), 2, RoundingMode.HALF_UP)
+                : numerator.divide(denominator, 2, RoundingMode.HALF_UP);
+
+        BigDecimal outstandingBalance = principal;
+
+        for (int i = 1; i <= tenureMonths; i++) {
+            BigDecimal interestComponent = outstandingBalance.multiply(monthlyRate).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal principalComponent = emiAmount.subtract(interestComponent);
+
+            
+            if (i == tenureMonths) {
+                principalComponent = outstandingBalance;
+                emiAmount = principalComponent.add(interestComponent);
+            }
+
+            outstandingBalance = outstandingBalance.subtract(principalComponent);
+
+            EmiSchedule emi = new EmiSchedule();
+            emi.setDisbursement(disbursement);
+            emi.setInstallmentNo(i);
+            emi.setDueDate(startDate.plusMonths(i));
+            emi.setEmiAmount(emiAmount);
+            emi.setPrincipalComponent(principalComponent);
+            emi.setInterestComponent(interestComponent);
+            emi.setOutstandingBalance(outstandingBalance.max(BigDecimal.ZERO));
+            emi.setPenaltyAmount(BigDecimal.ZERO);
+            emi.setStatus(EmiStatus.PENDING);
+
+            emiScheduleRepository.save(emi);
+		
+	}
+}
 }

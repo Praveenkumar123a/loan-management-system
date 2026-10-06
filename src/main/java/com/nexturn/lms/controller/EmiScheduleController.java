@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.nexturn.lms.dto.EmiScheduleResponse;
 import com.nexturn.lms.entity.Disbursement;
-import com.nexturn.lms.repository.DisbursementRepository;
+import com.nexturn.lms.service.DisbursementService;
 import com.nexturn.lms.service.EmiScheduleService;
 
 @RestController
@@ -18,14 +18,13 @@ public class EmiScheduleController {
 
     @Autowired
     private EmiScheduleService emiScheduleService;
-
+    
     @Autowired
-    private DisbursementRepository disbursementRepository;
+    private DisbursementService disbursementService;
 
     @GetMapping("/disbursement/{disbursementId}")
     public ResponseEntity<List<EmiScheduleResponse>> getByDisbursement(@PathVariable Integer disbursementId) {
-        Disbursement disbursement = disbursementRepository.findById(disbursementId)
-                .orElseThrow(() -> new RuntimeException("Disbursement not found: " + disbursementId));
+    	Disbursement disbursement =disbursementService.getById(disbursementId);
 
         List<EmiScheduleResponse> responses = emiScheduleService.getByDisbursement(disbursement)
                 .stream().map(EmiScheduleResponse::new).toList();

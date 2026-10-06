@@ -35,8 +35,7 @@ public class ApprovalController {
         LoanApplication application = applicationService.getById(applicationId);
         User manager = userService.getById(request.getManagerId());
 
-        Approval approval = approvalService.decide(
-                application, manager, request.isApprove(), request.getComments(),
+        Approval approval = approvalService.decide(application, manager, request.isApprove(), request.getComments(),
                 request.getApprovedAmount(), request.getInterestRate(), request.getTenureMonths());
 
         return ResponseEntity.ok(new ApprovalResponse(approval));

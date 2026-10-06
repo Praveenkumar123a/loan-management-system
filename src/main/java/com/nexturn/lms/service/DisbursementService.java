@@ -8,4 +8,8 @@ import com.nexturn.lms.entity.User;
 
 public interface DisbursementService {
     Disbursement disburse(LoanApplication application, User disbursedBy, LocalDate disbursedDate);
+
+	Disbursement getById(Integer disbursementId);
+
+	Disbursement getByApplication(LoanApplication application);
 }

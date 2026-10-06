@@ -1,5 +1,7 @@
 package com.nexturn.lms.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.nexturn.lms.entity.Disbursement;
@@ -9,4 +11,5 @@ public interface EmiScheduleService {
     List<EmiSchedule> getByDisbursement(Disbursement disbursement);
     List<EmiSchedule> getOverdueEmis();
     EmiSchedule getById(Integer emiId);
+    void generateEmiSchedule(Disbursement disbursement,BigDecimal principal,BigDecimal annualRate, int tenureMonths,LocalDate startDate);
 }
