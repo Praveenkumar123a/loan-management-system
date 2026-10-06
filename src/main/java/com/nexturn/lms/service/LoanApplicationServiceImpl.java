@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.nexturn.lms.entity.ApplicantProfile;
 import com.nexturn.lms.entity.LoanApplication;
@@ -33,27 +34,50 @@ public class LoanApplicationServiceImpl implements LoanApplicationService {
     private EligibilityRuleService eligibilityRuleService;
 
     @Override
-    public LoanApplication submitApplication(User applicant,Integer productId,BigDecimal requestedAmount,int tenureMonths,String purpose) {
+    @Transactional
+    public LoanApplication submitApplication(
+            User applicant,
+            Integer productId,
+            BigDecimal requestedAmount,
+            int tenureMonths,
+            String purpose) {
 
-        List<ApplicationStatus> activeStatuses=List.of(
-            ApplicationStatus.SUBMITTED,
-            ApplicationStatus.RECOMMENDED,
-            ApplicationStatus.APPROVED
+        List<ApplicationStatus> activeStatuses = List.of(
+                ApplicationStatus.SUBMITTED,
+                ApplicationStatus.RECOMMENDED,
+                ApplicationStatus.APPROVED
         );
 
-        if(applicationRepository.existsByApplicant_UserIdAndStatusIn(applicant.getUserId(),activeStatuses))
-            throw new IllegalStateException("You already have an active loan application. Please wait until it is completed before applying again.");
+        if (applicationRepository.existsByApplicant_UserIdAndStatusIn(
+                applicant.getUserId(), activeStatuses)) {
 
-        LoanProduct product=productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Loan product not found: "+productId));
+            throw new IllegalStateException(
+                    "You already have an active loan application. Please wait until it is completed before applying again.");
+        }
 
-        if(requestedAmount.compareTo(product.getMinAmount())<0 || requestedAmount.compareTo(product.getMaxAmount())>0)
-            throw new IllegalArgumentException("Requested amount outside product's allowed range");
+        ApplicantProfile profile = profileRepository.findByUser(applicant)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Applicant profile not found — complete KYC first"));
 
-        if(tenureMonths<product.getMinTenureMonths() || tenureMonths>product.getMaxTenureMonths())
-            throw new IllegalArgumentException("Requested tenure outside product's allowed range");
+        LoanProduct product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Loan product not found: " + productId));
 
-        LoanApplication application=new LoanApplication();
+        if (requestedAmount.compareTo(product.getMinAmount()) < 0
+                || requestedAmount.compareTo(product.getMaxAmount()) > 0) {
+
+            throw new IllegalArgumentException(
+                    "Requested amount outside product's allowed range");
+        }
+
+        if (tenureMonths < product.getMinTenureMonths()
+                || tenureMonths > product.getMaxTenureMonths()) {
+
+            throw new IllegalArgumentException(
+                    "Requested tenure outside product's allowed range");
+        }
+
+        LoanApplication application = new LoanApplication();
         application.setApplicant(applicant);
         application.setProduct(product);
         application.setRequestedAmount(requestedAmount);
@@ -62,12 +86,12 @@ public class LoanApplicationServiceImpl implements LoanApplicationService {
         application.setStatus(ApplicationStatus.SUBMITTED);
         application.setSubmittedAt(LocalDateTime.now());
 
-        LoanApplication saved=applicationRepository.save(application);
+        LoanApplication saved = applicationRepository.save(application);
 
-        ApplicantProfile profile=profileRepository.findByUser(applicant)
-                .orElseThrow(() -> new ResourceNotFoundException("Applicant profile not found — complete KYC first"));
+        int score = eligibilityRuleService.calculateEligibilityScore(
+                profile,
+                saved);
 
-        int score=eligibilityRuleService.calculateEligibilityScore(profile,saved);
         saved.setEligibilityScore(score);
 
         return applicationRepository.save(saved);
@@ -75,24 +99,32 @@ public class LoanApplicationServiceImpl implements LoanApplicationService {
 
     @Override
     public LoanApplication getById(Integer applicationId) {
+
         return applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Application not found: "+applicationId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Application not found: " + applicationId));
     }
 
     @Override
     public List<LoanApplication> getByApplicant(Integer applicantId) {
+
         return applicationRepository.findByApplicant_UserId(applicantId);
     }
 
     @Override
     public List<LoanApplication> getByStatus(ApplicationStatus status) {
+
         return applicationRepository.findByStatus(status);
     }
 
     @Override
-    public LoanApplication updateStatus(Integer applicationId,ApplicationStatus newStatus) {
-        LoanApplication application=getById(applicationId);
+    public LoanApplication updateStatus(
+            Integer applicationId,
+            ApplicationStatus newStatus) {
+
+        LoanApplication application = getById(applicationId);
         application.setStatus(newStatus);
+
         return applicationRepository.save(application);
     }
 }

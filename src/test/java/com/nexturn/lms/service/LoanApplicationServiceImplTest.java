@@ -2,7 +2,9 @@ package com.nexturn.lms.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,6 +24,7 @@ import com.nexturn.lms.entity.ApplicantProfile;
 import com.nexturn.lms.entity.LoanApplication;
 import com.nexturn.lms.entity.LoanProduct;
 import com.nexturn.lms.entity.User;
+import com.nexturn.lms.exception.ResourceNotFoundException;
 import com.nexturn.lms.repository.ApplicantProfileRepository;
 import com.nexturn.lms.repository.LoanApplicationRepository;
 import com.nexturn.lms.repository.LoanProductRepository;
@@ -74,19 +77,24 @@ class LoanApplicationServiceImplTest {
         application.setRequestedAmount(new BigDecimal("500000"));
         application.setTenureMonths(60);
         application.setPurpose("Home renovation");
+        application.setStatus(ApplicationStatus.SUBMITTED);
     }
 
     @Test
     void submitApplication_shouldCreateApplicationAndCalculateEligibility() {
+
+        when(applicationRepository.existsByApplicant_UserIdAndStatusIn(
+                any(Integer.class), any()))
+                .thenReturn(false);
+
+        when(profileRepository.findByUser(applicant))
+                .thenReturn(Optional.of(profile));
 
         when(productRepository.findById(1))
                 .thenReturn(Optional.of(product));
 
         when(applicationRepository.save(any(LoanApplication.class)))
                 .thenReturn(application);
-
-        when(profileRepository.findByUser(applicant))
-                .thenReturn(Optional.of(profile));
 
         when(eligibilityRuleService.calculateEligibilityScore(
                 profile,
@@ -111,16 +119,59 @@ class LoanApplicationServiceImplTest {
         assertEquals(ApplicationStatus.SUBMITTED, result.getStatus());
         assertEquals(80, result.getEligibilityScore());
 
-        verify(productRepository).findById(1);
-
-        verify(applicationRepository, times(2))
-                .save(any(LoanApplication.class));
+        verify(applicationRepository)
+                .existsByApplicant_UserIdAndStatusIn(
+                        any(Integer.class), any());
 
         verify(profileRepository)
                 .findByUser(applicant);
 
+        verify(productRepository)
+                .findById(1);
+
+        verify(applicationRepository, times(2))
+                .save(any(LoanApplication.class));
+
         verify(eligibilityRuleService)
                 .calculateEligibilityScore(profile, application);
+    }
+
+    @Test
+    void submitApplication_shouldNotCreateApplicationWhenKycIsMissing() {
+
+        when(applicationRepository.existsByApplicant_UserIdAndStatusIn(
+                any(Integer.class), any()))
+                .thenReturn(false);
+
+        when(profileRepository.findByUser(applicant))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> loanApplicationService.submitApplication(
+                        applicant,
+                        1,
+                        new BigDecimal("500000"),
+                        60,
+                        "Home renovation"
+                )
+        );
+
+        verify(applicationRepository)
+                .existsByApplicant_UserIdAndStatusIn(
+                        any(Integer.class), any());
+
+        verify(profileRepository)
+                .findByUser(applicant);
+
+        verify(applicationRepository, never())
+                .save(any(LoanApplication.class));
+
+        verify(productRepository, never())
+                .findById(any(Integer.class));
+
+        verify(eligibilityRuleService, never())
+                .calculateEligibilityScore(any(), any());
     }
 
     @Test
