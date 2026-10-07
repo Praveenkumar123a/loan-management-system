@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setEmail(email);
-        user.setPassword(rawPassword); // TODO: replace with passwordEncoder.encode(rawPassword) once Security is added
+        user.setPassword(rawPassword); 
         user.setRole(role);
 
         return userRepository.save(user);
